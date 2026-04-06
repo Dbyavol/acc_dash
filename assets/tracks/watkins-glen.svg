@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520">
+  <rect width="800" height="520" fill="#0b1627"/>
+  <rect x="20" y="20" width="760" height="480" rx="28" fill="#12233b"/>
+  <path d="M210 146 C168 173,161 244,204 275 C257 313,344 278,397 310 C443 337,435 405,492 407 C560 410,591 327,646 306 C692 288,692 213,651 185 C609 155,539 178,492 195 C444 213,404 178,367 147 C321 109,257 115,210 146 Z" fill="none" stroke="#edf3ff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="444" fill="#ffd36a" font-family="Manrope, Arial, sans-serif" font-size="30" text-anchor="middle">Watkins Glen</text>
+  <text x="400" y="476" fill="#98abc6" font-family="Manrope, Arial, sans-serif" font-size="18" text-anchor="middle">Заглушка. Замените файл своей схемой трассы.</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520">
+  <rect width="800" height="520" fill="#0b1627"/>
+  <rect x="20" y="20" width="760" height="480" rx="28" fill="#12233b"/>
+  <path d="M241 121 C190 144,157 197,170 252 C183 306,243 336,293 321 C344 305,363 234,416 226 C481 216,535 288,594 263 C650 239,675 153,626 113 C566 63,493 146,422 153 C359 159,299 95,241 121 Z" fill="none" stroke="#edf3ff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="444" fill="#ffd36a" font-family="Manrope, Arial, sans-serif" font-size="30" text-anchor="middle">Zandvoort</text>
+  <text x="400" y="476" fill="#98abc6" font-family="Manrope, Arial, sans-serif" font-size="18" text-anchor="middle">Заглушка. Замените файл своей схемой трассы.</text>
+</svg>

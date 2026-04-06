@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520">
+  <rect width="800" height="520" fill="#0b1627"/>
+  <rect x="20" y="20" width="760" height="480" rx="28" fill="#12233b"/>
+  <path d="M164 217 C161 146,221 95,289 112 C334 123,359 173,403 185 C456 200,523 152,571 178 C617 202,620 271,590 312 C564 347,515 340,476 359 C433 379,398 426,352 408 C295 385,301 303,246 281 C201 263,166 261,164 217 Z" fill="none" stroke="#edf3ff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M430 148 C455 109,514 95,548 123 C582 151,584 205,547 223" fill="none" stroke="#edf3ff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="444" fill="#ffd36a" font-family="Manrope, Arial, sans-serif" font-size="30" text-anchor="middle">Nurburgring Nordschleife</text>
+  <text x="400" y="476" fill="#98abc6" font-family="Manrope, Arial, sans-serif" font-size="18" text-anchor="middle">Заглушка. Замените файл своей схемой трассы.</text>
+</svg>
