@@ -120,7 +120,6 @@ function renderPilots() {
         <article class="pilot-card ${index === 0 ? "featured" : ""}">
           <div class="pilot-card-header">
             <div>
-              <p class="pilot-tag">${index === 0 ? "Основной пилот" : "Пилот состава"}</p>
               <h3>${escapeHtml(pilot.name)}</h3>
             </div>
             <div class="pilot-number">${escapeHtml(pilot.number)}</div>
