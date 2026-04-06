@@ -121,5 +121,44 @@ const pilots = [
       Zandvoort: "0:00.000",
       Zolder: "0:00.000"
     }
+  },
+  {
+    name: "Daniil Chernovolov",
+    number: "#13",
+    age: 22,
+    skill: "Средний",
+    style: "-",
+    experience: "ACC 120 часов, F1 2020 70 часов.",
+    about: "-",
+    equipment: "PXN V-99.",
+    titles: "Отсутствуют",
+    penalties: "Отсутствуют",
+    lapTimes: {
+      Barcelona: "0:00.000",
+      "Brands Hatch": "0:00.000",
+      "Circuit of the Americas": "0:00.000",
+      Donington: "0:00.000",
+      Hungaroring: "0:00.000",
+      Imola: "1:44.642",
+      Indianapolis: "0:00.000",
+      Kyalami: "1:41.876",
+      "Laguna Seca": "0:00.000",
+      Misano: "0:00.000",
+      Monza: "1:46.610",
+      "Mount Panorama": "2:00.902",
+      "Nurburgring Nordschleife": "8:21.218",
+      "Nurburgring GP": "1:55.436",
+      "Oulton Park": "0:00.000",
+      "Paul Ricard": "0:00.000",
+      "Red Bull Ring": "1:29.110",
+      Silverstone: "0:00.000",
+      Snetterton: "0:00.000",
+      Spa: "2:17.643",
+      Suzuka: "0:00.000",
+      Valencia: "0:00.000",
+      "Watkins Glen": "0:00.000",
+      Zandvoort: "0:00.000",
+      Zolder: "0:00.000"
+    }
   }
 ];

@@ -34,7 +34,25 @@ function timeToMs(time) {
   return minutes * 60000 + seconds * 1000 + millis;
 }
 
+function formatGap(gapMs) {
+  if (gapMs === null) {
+    return "—";
+  }
+
+  const seconds = Math.floor(gapMs / 1000);
+  const millis = String(gapMs % 1000).padStart(3, "0");
+
+  return `+${seconds}.${millis}`;
+}
+
 const tracks = Object.keys(pilots[0].lapTimes);
+const sortedPilots = [...pilots].sort((left, right) => {
+  const leftNumber = Number(left.number.replace("#", ""));
+  const rightNumber = Number(right.number.replace("#", ""));
+
+  return leftNumber - rightNumber;
+});
+
 const state = {
   activeView: "cards",
   selectedTrack: tracks[0]
@@ -44,7 +62,7 @@ function buildTrackRecords() {
   return tracks.map((track) => {
     let best = null;
 
-    pilots.forEach((pilot) => {
+    sortedPilots.forEach((pilot) => {
       const time = pilot.lapTimes[track];
       const timeMs = timeToMs(time);
 
@@ -72,7 +90,7 @@ function buildTrackRecords() {
 }
 
 function buildTrackLeaderboard(track) {
-  return pilots
+  return sortedPilots
     .map((pilot) => {
       const time = pilot.lapTimes[track];
       const timeMs = timeToMs(time);
@@ -105,8 +123,8 @@ function buildTrackLeaderboard(track) {
 function renderPilots() {
   const pilotGrid = document.querySelector("#pilot-grid");
 
-  pilotGrid.innerHTML = pilots
-    .map((pilot, index) => {
+  pilotGrid.innerHTML = sortedPilots
+    .map((pilot) => {
       const achievementsBlock = pilot.achievements
         ? `
           <div class="info-panel">
@@ -117,7 +135,7 @@ function renderPilots() {
         : "";
 
       return `
-        <article class="pilot-card ${index === 0 ? "featured" : ""}">
+        <article class="pilot-card">
           <div class="pilot-card-header">
             <div>
               <h3>${escapeHtml(pilot.name)}</h3>
@@ -212,6 +230,7 @@ function renderTrackLeaderboard() {
   const summary = document.querySelector("#track-summary");
   const validTimes = leaderboard.filter((entry) => entry.timeMs !== null);
   const bestEntry = validTimes[0] || null;
+  const leaderTime = bestEntry ? bestEntry.timeMs : null;
 
   title.textContent = state.selectedTrack;
   count.textContent = `${leaderboard.length} пилота`;
@@ -239,6 +258,7 @@ function renderTrackLeaderboard() {
     .map((entry, index) => {
       const place = entry.timeMs === null ? "—" : String(index + 1);
       const time = entry.timeMs === null ? "Нет времени" : entry.time;
+      const gap = entry.timeMs === null || leaderTime === null ? "—" : formatGap(entry.timeMs - leaderTime);
 
       return `
         <tr>
@@ -246,7 +266,7 @@ function renderTrackLeaderboard() {
           <td>${escapeHtml(entry.name)}</td>
           <td>${escapeHtml(entry.number)}</td>
           <td>${escapeHtml(time)}</td>
-          <td>${escapeHtml(entry.skill)}</td>
+          <td>${escapeHtml(gap)}</td>
         </tr>
       `;
     })
