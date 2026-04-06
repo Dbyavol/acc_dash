@@ -22,190 +22,113 @@
         <nav class="topbar">
           <div class="brand">ACC GRID</div>
           <div class="nav-links">
-            <a href="#pilots">Пилоты</a>
-            <a href="#records">Рекорды трасс</a>
+            <button class="nav-toggle is-active" type="button" data-view-target="cards">
+              Карточки
+            </button>
+            <button class="nav-toggle" type="button" data-view-target="tracks">
+              Трассы
+            </button>
           </div>
         </nav>
 
         <div class="hero-content">
           <div class="hero-copy">
             <p class="eyebrow">Assetto Corsa Competizione</p>
-            <h1>Карточки пилотов и лучшие времена в одном месте</h1>
+            <h1>Пилоты и результаты в полноэкранном формате</h1>
             <p class="hero-text">
-              Статичная страница для GitHub Pages с профилями гонщиков, их
-              оборудованием, статусом и быстрым обзором рекордов на каждой
-              трассе.
+              Основной режим показывает карточки состава, а режим трасс
+              переключает сайт в панель аналитики с результатами всех пилотов на
+              выбранной трассе.
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="#pilots">Смотреть пилотов</a>
-              <a class="button button-secondary" href="#records">Открыть рекорды</a>
+              <button class="button button-primary" type="button" data-view-target="cards">
+                Открыть карточки
+              </button>
+              <button class="button button-secondary" type="button" data-view-target="tracks">
+                Открыть трассы
+              </button>
             </div>
           </div>
 
-          <aside class="hero-panel">
-            <span class="panel-label">Профиль пилота</span>
-            <div class="driver-identity">
-              <div>
-                <p class="driver-name">Stepan Boleznov</p>
-                <p class="driver-meta">#188 · 21 год · Средний уровень</p>
-              </div>
-              <div class="number-chip">188</div>
-            </div>
-            <p class="driver-note">
-              Чистая борьба, аккуратная оборона и попытка ехать стабильно даже
-              при нехватке большого соревновательного опыта.
-            </p>
+          <aside class="hero-panel" id="hero-pilot">
+            <span class="panel-label">Фокус пилот</span>
           </aside>
         </div>
       </header>
 
-      <main>
-        <section class="section" id="pilots">
-          <div class="section-heading">
-            <p class="section-kicker">Раздел 1</p>
-            <h2>Карточки пилотов</h2>
-            <p>
-              Здесь можно хранить анкеты участников, их технику, уровень и
-              короткое описание стиля пилотирования.
-            </p>
-          </div>
-
-          <div class="pilot-grid">
-            <article class="pilot-card featured">
-              <div class="pilot-card-header">
-                <div>
-                  <p class="pilot-tag">Основной пилот</p>
-                  <h3>Stepan Boleznov</h3>
-                </div>
-                <div class="pilot-number">#188</div>
-              </div>
-
-              <div class="pilot-highlights">
-                <div class="stat-box">
-                  <span class="stat-label">Возраст</span>
-                  <strong>21</strong>
-                </div>
-                <div class="stat-box">
-                  <span class="stat-label">Навык</span>
-                  <strong>Средний</strong>
-                </div>
-                <div class="stat-box">
-                  <span class="stat-label">Стиль</span>
-                  <strong>Чистая борьба</strong>
-                </div>
-              </div>
-
-              <div class="pilot-columns">
-                <div class="info-panel">
-                  <h4>Опыт</h4>
-                  <p>
-                    ACC 45 часов, AC 100 часов. Основной бэкграунд: шашки и
-                    дрифт, поэтому скорость местами уже есть, но стабильность
-                    еще набирается.
-                  </p>
-                </div>
-
-                <div class="info-panel">
-                  <h4>О себе</h4>
-                  <p>
-                    Недавно в автосимах, без большого соревновательного опыта.
-                    Иногда получается показать хороший темп на круге, но чаще
-                    всего главный резерв в стабильности и повторяемости.
-                  </p>
-                </div>
-
-                <div class="info-panel">
-                  <h4>Оборудование</h4>
-                  <p>Moza R9v3, педали SP-R.</p>
-                </div>
-
-                <div class="info-panel compact">
-                  <h4>Титулы</h4>
-                  <p>Отсутствуют</p>
-                </div>
-
-                <div class="info-panel compact warning">
-                  <h4>Штрафные санкции</h4>
-                  <p>Отсутствуют</p>
-                </div>
-              </div>
-            </article>
-
-            <article class="pilot-card draft">
-              <div class="pilot-card-header">
-                <div>
-                  <p class="pilot-tag">Свободный слот</p>
-                  <h3>Новый пилот</h3>
-                </div>
-                <div class="pilot-number muted">#000</div>
-              </div>
-              <p class="draft-copy">
-                Этот блок можно дублировать для новых участников. Достаточно
-                заменить имя, номер, описание и оборудование.
+      <main class="main-dashboard">
+        <section class="dashboard-view is-active" data-view="cards">
+          <div class="section">
+            <div class="section-heading">
+              <p class="section-kicker">Режим 1</p>
+              <h2>Карточки пилотов</h2>
+              <p>
+                Все участники лежат в одном файле с данными, а интерфейс сам
+                собирает карточки и заполняет экран без узкой центральной
+                колонки.
               </p>
-            </article>
+            </div>
+
+            <div class="pilot-grid" id="pilot-grid"></div>
           </div>
         </section>
 
-        <section class="section" id="records">
-          <div class="section-heading">
-            <p class="section-kicker">Раздел 2</p>
-            <h2>Лучшие времена на трассах</h2>
-            <p>
-              Таблица для рекордов команды или лиги. Сейчас я заполнил ее вашими
-              стартовыми значениями, чтобы структуру уже можно было использовать.
-            </p>
-          </div>
-
-          <div class="records-card">
-            <div class="records-card-header">
-              <div>
-                <p class="pilot-tag">Lap Timing</p>
-                <h3>Лучшие времена по трассам</h3>
-              </div>
-              <div class="records-badge">25 трасс</div>
+        <section class="dashboard-view" data-view="tracks">
+          <div class="section section-tracks">
+            <div class="section-heading">
+              <p class="section-kicker">Режим 2</p>
+              <h2>Результаты по трассам</h2>
+              <p>
+                Выберите трассу слева, и справа сразу откроется таблица
+                результатов всех пилотов по этой трассе, отсортированная по
+                времени.
+              </p>
             </div>
 
-            <div class="records-table-wrapper">
-              <table class="records-table">
-                <thead>
-                  <tr>
-                    <th>Трасса</th>
-                    <th>Лучшее время</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td>Barcelona</td><td>0:00.000</td></tr>
-                  <tr><td>Brands Hatch</td><td>0:00.000</td></tr>
-                  <tr><td>Circuit of the Americas</td><td>0:00.000</td></tr>
-                  <tr><td>Donington</td><td>0:00.000</td></tr>
-                  <tr><td>Hungaroring</td><td>0:00.000</td></tr>
-                  <tr><td>Imola</td><td>0:00.000</td></tr>
-                  <tr><td>Indianapolis</td><td>0:00.000</td></tr>
-                  <tr><td>Kyalami</td><td>0:00.000</td></tr>
-                  <tr><td>Laguna Seca</td><td>0:00.000</td></tr>
-                  <tr><td>Misano</td><td>0:00.000</td></tr>
-                  <tr><td>Monza</td><td>0:00.000</td></tr>
-                  <tr><td>Mount Panorama</td><td>0:00.000</td></tr>
-                  <tr><td>Nurburgring Nordschleife</td><td>0:00.000</td></tr>
-                  <tr><td>Nurburgring GP</td><td>0:00.000</td></tr>
-                  <tr><td>Oulton Park</td><td>0:00.000</td></tr>
-                  <tr><td>Paul Ricard</td><td>0:00.000</td></tr>
-                  <tr><td>Red Bull Ring</td><td>0:00.000</td></tr>
-                  <tr><td>Silverstone</td><td>0:00.000</td></tr>
-                  <tr><td>Snetterton</td><td>0:00.000</td></tr>
-                  <tr><td>Spa</td><td>0:00.000</td></tr>
-                  <tr><td>Suzuka</td><td>0:00.000</td></tr>
-                  <tr><td>Valencia</td><td>0:00.000</td></tr>
-                  <tr><td>Watkins Glen</td><td>0:00.000</td></tr>
-                  <tr><td>Zandvoort</td><td>0:00.000</td></tr>
-                  <tr><td>Zolder</td><td>0:00.000</td></tr>
-                </tbody>
-              </table>
+            <div class="tracks-layout">
+              <aside class="track-selector-panel">
+                <div class="panel-head">
+                  <p class="pilot-tag">Трассы</p>
+                  <h3>Список трасс</h3>
+                </div>
+                <div class="track-selector" id="track-selector"></div>
+              </aside>
+
+              <div class="track-results-panel">
+                <div class="track-summary" id="track-summary"></div>
+
+                <div class="records-card track-table-card">
+                  <div class="records-card-header">
+                    <div>
+                      <p class="pilot-tag">Leaderboard</p>
+                      <h3 id="track-table-title">Результаты трассы</h3>
+                    </div>
+                    <div class="records-badge" id="track-table-count">0 пилотов</div>
+                  </div>
+
+                  <div class="records-table-wrapper">
+                    <table class="records-table">
+                      <thead>
+                        <tr>
+                          <th>Позиция</th>
+                          <th>Пилот</th>
+                          <th>Номер</th>
+                          <th>Время</th>
+                          <th>Навык</th>
+                        </tr>
+                      </thead>
+                      <tbody id="track-results-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
       </main>
     </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
   </body>
 </html>
