@@ -131,7 +131,7 @@ const trackImageMap = {
   Misano: "assets/tracks/misano.svg",
   Monza: "assets/tracks/monza.svg",
   "Mount Panorama": "assets/tracks/mount-panorama.png",
-  "Nurburgring Nordschleife": "assets/tracks/nurburgring-nordschleife.svg",
+  "Nurburgring Nordschleife": "assets/tracks/Nordschleife.png",
   "Nurburgring GP": "assets/tracks/nurburgring-gp.svg",
   "Oulton Park": "assets/tracks/oulton-park.svg",
   "Paul Ricard": "assets/tracks/paul-ricard.png",
