@@ -56,8 +56,54 @@ const sortedPilots = [...pilots].sort((left, right) => {
 const state = {
   activeView: "cards",
   selectedTrack: tracks[0],
-  selectedPilotNumber: sortedPilots[0]?.number || null
+  selectedPilotNumber: sortedPilots[0]?.number || null,
+  listView: "compact",
+  searchQuery: "",
+  skillFilter: "all",
+  sortBy: "number-asc"
 };
+
+function getPilotNumberValue(pilot) {
+  return Number(pilot.number.replace("#", ""));
+}
+
+function getFilteredPilots() {
+  const query = state.searchQuery.trim().toLowerCase();
+
+  return [...sortedPilots]
+    .filter((pilot) => {
+      const matchesSkill = state.skillFilter === "all" || pilot.skill === state.skillFilter;
+
+      if (!matchesSkill) {
+        return false;
+      }
+
+      if (!query) {
+        return true;
+      }
+
+      const haystack = [pilot.name, pilot.number, pilot.skill, pilot.equipment]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    })
+    .sort((left, right) => {
+      switch (state.sortBy) {
+        case "number-desc":
+          return getPilotNumberValue(right) - getPilotNumberValue(left);
+        case "name-asc":
+          return left.name.localeCompare(right.name, "ru");
+        case "age-asc":
+          return left.age - right.age;
+        case "age-desc":
+          return right.age - left.age;
+        case "number-asc":
+        default:
+          return getPilotNumberValue(left) - getPilotNumberValue(right);
+      }
+    });
+}
 
 function buildTrackRecords() {
   return tracks.map((track) => {
@@ -123,16 +169,48 @@ function buildTrackLeaderboard(track) {
 
 function renderPilotList() {
   const pilotList = document.querySelector("#pilot-list");
+  const filteredPilots = getFilteredPilots();
 
-  pilotList.innerHTML = sortedPilots
-    .map(
-      (pilot) => `
+  pilotList.className = `pilot-list pilot-list-${state.listView}`;
+
+  if (!filteredPilots.length) {
+    pilotList.innerHTML = `
+      <div class="empty-state">
+        <h3>Пилоты не найдены</h3>
+        <p>Попробуйте изменить поиск, фильтр навыка или сортировку.</p>
+      </div>
+    `;
+    return;
+  }
+
+  pilotList.innerHTML = filteredPilots
+    .map((pilot) => {
+      const compactMeta =
+        state.listView === "compact"
+          ? ""
+          : `<span class="pilot-list-meta">${escapeHtml(pilot.skill)} · ${pilot.age} лет</span>`;
+
+      const detailedBlock =
+        state.listView === "detailed"
+          ? `
+            <div class="pilot-list-details">
+              <span>${escapeHtml(pilot.equipment)}</span>
+              <span>${escapeHtml(pilot.experience)}</span>
+            </div>
+          `
+          : "";
+
+      return `
         <button class="pilot-list-item" type="button" data-pilot-number="${escapeHtml(pilot.number)}">
-          <span class="pilot-list-name">${escapeHtml(pilot.name)}</span>
+          <div class="pilot-list-main">
+            <span class="pilot-list-name">${escapeHtml(pilot.name)}</span>
+            ${compactMeta}
+            ${detailedBlock}
+          </div>
           <span class="pilot-list-number">${escapeHtml(pilot.number)}</span>
         </button>
-      `
-    )
+      `;
+    })
     .join("");
 
   pilotList.querySelectorAll("[data-pilot-number]").forEach((button) => {
@@ -365,10 +443,44 @@ function bindProfileControls() {
   });
 }
 
+function bindPilotToolbar() {
+  const searchInput = document.querySelector("#pilot-search");
+  const skillFilter = document.querySelector("#pilot-skill-filter");
+  const sortSelect = document.querySelector("#pilot-sort");
+
+  searchInput.addEventListener("input", (event) => {
+    state.searchQuery = event.target.value;
+    renderPilotList();
+  });
+
+  skillFilter.addEventListener("change", (event) => {
+    state.skillFilter = event.target.value;
+    renderPilotList();
+  });
+
+  sortSelect.addEventListener("change", (event) => {
+    state.sortBy = event.target.value;
+    renderPilotList();
+  });
+
+  document.querySelectorAll("[data-list-view]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.listView = button.dataset.listView;
+
+      document.querySelectorAll("[data-list-view]").forEach((control) => {
+        control.classList.toggle("is-active", control.dataset.listView === state.listView);
+      });
+
+      renderPilotList();
+    });
+  });
+}
+
 renderPilotList();
 renderPilotProfile();
 renderTrackSelector();
 renderTrackLeaderboard();
 bindViewControls();
 bindProfileControls();
+bindPilotToolbar();
 setActiveView(state.activeView);

@@ -36,6 +36,54 @@
               <h2>Список пилотов</h2>
             </div>
 
+            <div class="pilot-toolbar">
+              <div class="toolbar-search">
+                <label class="toolbar-label" for="pilot-search">Поиск</label>
+                <input
+                  class="toolbar-input"
+                  id="pilot-search"
+                  type="search"
+                  placeholder="Имя, номер, навык"
+                />
+              </div>
+
+              <div class="toolbar-group">
+                <label class="toolbar-label" for="pilot-skill-filter">Навык</label>
+                <select class="toolbar-select" id="pilot-skill-filter">
+                  <option value="all">Все</option>
+                  <option value="Начинающий">Начинающий</option>
+                  <option value="Средний">Средний</option>
+                  <option value="Продвинутый">Продвинутый</option>
+                </select>
+              </div>
+
+              <div class="toolbar-group">
+                <label class="toolbar-label" for="pilot-sort">Сортировка</label>
+                <select class="toolbar-select" id="pilot-sort">
+                  <option value="number-asc">Номер: по возрастанию</option>
+                  <option value="number-desc">Номер: по убыванию</option>
+                  <option value="name-asc">Имя: А-Я</option>
+                  <option value="age-asc">Возраст: младше выше</option>
+                  <option value="age-desc">Возраст: старше выше</option>
+                </select>
+              </div>
+
+              <div class="toolbar-views">
+                <span class="toolbar-label">Вид</span>
+                <div class="view-mode-switch">
+                  <button class="view-mode-button is-active" type="button" data-list-view="compact">
+                    Мини
+                  </button>
+                  <button class="view-mode-button" type="button" data-list-view="cozy">
+                    Крупнее
+                  </button>
+                  <button class="view-mode-button" type="button" data-list-view="detailed">
+                    Инфо
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="pilot-list" id="pilot-list"></div>
           </div>
         </section>
