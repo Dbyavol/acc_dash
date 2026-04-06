@@ -102,23 +102,6 @@ function buildTrackLeaderboard(track) {
     });
 }
 
-function renderHeroPilot() {
-  const pilot = pilots[0];
-  const heroPilot = document.querySelector("#hero-pilot");
-
-  heroPilot.innerHTML = `
-    <span class="panel-label">Фокус пилот</span>
-    <div class="driver-identity">
-      <div>
-        <p class="driver-name">${escapeHtml(pilot.name)}</p>
-        <p class="driver-meta">${escapeHtml(pilot.number)} · ${pilot.age} лет · ${escapeHtml(pilot.skill)}</p>
-      </div>
-      <div class="number-chip">${escapeHtml(pilot.number.replace("#", ""))}</div>
-    </div>
-    <p class="driver-note">${escapeHtml(pilot.about)}</p>
-  `;
-}
-
 function renderPilots() {
   const pilotGrid = document.querySelector("#pilot-grid");
 
@@ -291,7 +274,6 @@ function bindViewControls() {
   });
 }
 
-renderHeroPilot();
 renderPilots();
 renderTrackSelector();
 renderTrackLeaderboard();
