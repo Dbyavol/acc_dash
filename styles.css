@@ -217,14 +217,16 @@ h3 {
   font-size: clamp(2rem, 3.8vw, 3.3rem);
 }
 
-.pilot-grid {
+.pilot-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   margin-top: 24px;
 }
 
+.pilot-list-item,
 .pilot-card,
+.profile-card,
 .records-card,
 .track-selector-panel,
 .summary-card {
@@ -233,6 +235,32 @@ h3 {
   border-radius: var(--radius-xl);
   background: linear-gradient(180deg, rgba(14, 27, 46, 0.9), rgba(9, 19, 34, 0.95));
   box-shadow: var(--shadow);
+}
+
+.pilot-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.pilot-list-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 211, 106, 0.35);
+}
+
+.pilot-list-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.pilot-list-number {
+  color: var(--gold);
+  font-family: "Russo One", sans-serif;
 }
 
 .pilot-card {
@@ -324,6 +352,29 @@ h3 {
 
 .section-tracks {
   min-height: calc(100vh - 150px);
+}
+
+.profile-shell {
+  margin-top: 8px;
+}
+
+.profile-topbar {
+  margin-bottom: 18px;
+}
+
+.back-button {
+  min-width: 180px;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.profile-laps-card {
+  margin-top: 0;
 }
 
 .tracks-layout {
@@ -446,13 +497,14 @@ h3 {
 }
 
 @media (max-width: 1280px) {
-  .pilot-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .pilot-list,
+  .profile-layout {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 980px) {
-  .pilot-grid,
+  .pilot-list,
   .tracks-layout,
   .track-summary,
   .pilot-columns {

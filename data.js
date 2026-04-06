@@ -4,6 +4,7 @@ const pilots = [
     number: "#188",
     age: 21,
     skill: "Средний",
+    license: "Не указана",
     style: "Чистая борьба",
     experience: "ACC 45 часов, AC 100 часов (шашки и дрифт).",
     about:
@@ -44,6 +45,7 @@ const pilots = [
     number: "#124",
     age: 31,
     skill: "Начинающий",
+    license: "Не указана",
     style: "Набор опыта",
     experience: "ACC 125 часов, ACE 40 часов.",
     about:
@@ -84,6 +86,7 @@ const pilots = [
     number: "#98",
     age: 19,
     skill: "Средний",
+    license: "Не указана",
     style: "Рассудительно, но с атакой в любую щель",
     experience:
       "ACC 200 часов, AC 1000 часов, iRacing 300 часов, LMU 100 часов и другие автосимы.",
@@ -127,6 +130,7 @@ const pilots = [
     number: "#13",
     age: 22,
     skill: "Средний",
+    license: "Не указана",
     style: "-",
     experience: "ACC 120 часов, F1 2020 70 часов.",
     about: "-",

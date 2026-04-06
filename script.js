@@ -55,7 +55,8 @@ const sortedPilots = [...pilots].sort((left, right) => {
 
 const state = {
   activeView: "cards",
-  selectedTrack: tracks[0]
+  selectedTrack: tracks[0],
+  selectedPilotNumber: sortedPilots[0]?.number || null
 };
 
 function buildTrackRecords() {
@@ -120,76 +121,139 @@ function buildTrackLeaderboard(track) {
     });
 }
 
-function renderPilots() {
-  const pilotGrid = document.querySelector("#pilot-grid");
+function renderPilotList() {
+  const pilotList = document.querySelector("#pilot-list");
 
-  pilotGrid.innerHTML = sortedPilots
-    .map((pilot) => {
-      const achievementsBlock = pilot.achievements
-        ? `
-          <div class="info-panel">
-            <h4>Достижения</h4>
-            <p>${escapeHtml(pilot.achievements)}</p>
-          </div>
-        `
-        : "";
-
-      return `
-        <article class="pilot-card">
-          <div class="pilot-card-header">
-            <div>
-              <h3>${escapeHtml(pilot.name)}</h3>
-            </div>
-            <div class="pilot-number">${escapeHtml(pilot.number)}</div>
-          </div>
-
-          <div class="pilot-highlights">
-            <div class="stat-box">
-              <span class="stat-label">Возраст</span>
-              <strong>${pilot.age}</strong>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">Навык</span>
-              <strong>${escapeHtml(pilot.skill)}</strong>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">Стиль</span>
-              <strong>${escapeHtml(pilot.style)}</strong>
-            </div>
-          </div>
-
-          <div class="pilot-columns">
-            <div class="info-panel">
-              <h4>Опыт</h4>
-              <p>${escapeHtml(pilot.experience)}</p>
-            </div>
-
-            <div class="info-panel">
-              <h4>О себе</h4>
-              <p>${escapeHtml(pilot.about)}</p>
-            </div>
-
-            ${achievementsBlock}
-
-            <div class="info-panel">
-              <h4>Оборудование</h4>
-              <p>${escapeHtml(pilot.equipment)}</p>
-            </div>
-
-            <div class="info-panel compact">
-              <h4>Титулы</h4>
-              <p>${escapeHtml(pilot.titles)}</p>
-            </div>
-
-            <div class="info-panel compact warning">
-              <h4>Штрафные санкции</h4>
-              <p>${escapeHtml(pilot.penalties)}</p>
-            </div>
-          </div>
-        </article>
-      `;
-    })
+  pilotList.innerHTML = sortedPilots
+    .map(
+      (pilot) => `
+        <button class="pilot-list-item" type="button" data-pilot-number="${escapeHtml(pilot.number)}">
+          <span class="pilot-list-name">${escapeHtml(pilot.name)}</span>
+          <span class="pilot-list-number">${escapeHtml(pilot.number)}</span>
+        </button>
+      `
+    )
     .join("");
+
+  pilotList.querySelectorAll("[data-pilot-number]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedPilotNumber = button.dataset.pilotNumber;
+      renderPilotProfile();
+      setActiveView("profile");
+    });
+  });
+}
+
+function renderPilotProfile() {
+  const profileLayout = document.querySelector("#profile-layout");
+  const pilot = sortedPilots.find((entry) => entry.number === state.selectedPilotNumber);
+
+  if (!pilot) {
+    profileLayout.innerHTML = "";
+    return;
+  }
+
+  const achievementsBlock = pilot.achievements
+    ? `
+      <div class="info-panel">
+        <h4>Достижения</h4>
+        <p>${escapeHtml(pilot.achievements)}</p>
+      </div>
+    `
+    : "";
+
+  const lapRows = tracks
+    .map(
+      (track) => `
+        <tr>
+          <td>${escapeHtml(track)}</td>
+          <td>${escapeHtml(pilot.lapTimes[track])}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  profileLayout.innerHTML = `
+    <article class="profile-card">
+      <div class="pilot-card-header">
+        <div>
+          <h2>${escapeHtml(pilot.name)}</h2>
+        </div>
+        <div class="pilot-number">${escapeHtml(pilot.number)}</div>
+      </div>
+
+      <div class="pilot-highlights">
+        <div class="stat-box">
+          <span class="stat-label">Возраст</span>
+          <strong>${pilot.age}</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Навык</span>
+          <strong>${escapeHtml(pilot.skill)}</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Лицензия</span>
+          <strong>${escapeHtml(pilot.license || "Не указана")}</strong>
+        </div>
+      </div>
+
+      <div class="pilot-columns">
+        <div class="info-panel">
+          <h4>Опыт</h4>
+          <p>${escapeHtml(pilot.experience)}</p>
+        </div>
+
+        <div class="info-panel">
+          <h4>О себе</h4>
+          <p>${escapeHtml(pilot.about)}</p>
+        </div>
+
+        <div class="info-panel">
+          <h4>Стиль</h4>
+          <p>${escapeHtml(pilot.style)}</p>
+        </div>
+
+        <div class="info-panel">
+          <h4>Оборудование</h4>
+          <p>${escapeHtml(pilot.equipment)}</p>
+        </div>
+
+        ${achievementsBlock}
+
+        <div class="info-panel compact">
+          <h4>Титулы</h4>
+          <p>${escapeHtml(pilot.titles)}</p>
+        </div>
+
+        <div class="info-panel compact warning">
+          <h4>Штрафные санкции</h4>
+          <p>${escapeHtml(pilot.penalties)}</p>
+        </div>
+      </div>
+    </article>
+
+    <div class="records-card profile-laps-card">
+      <div class="records-card-header">
+        <div>
+          <p class="pilot-tag">Lap Timing</p>
+          <h3>Времена кругов</h3>
+        </div>
+        <div class="records-badge">${tracks.length} трасс</div>
+      </div>
+
+      <div class="records-table-wrapper">
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>Трасса</th>
+              <th>Лучшее время</th>
+            </tr>
+          </thead>
+          <tbody>${lapRows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
 function renderTrackSelector() {
@@ -293,8 +357,18 @@ function bindViewControls() {
   });
 }
 
-renderPilots();
+function bindProfileControls() {
+  const backButton = document.querySelector("#back-to-list");
+
+  backButton.addEventListener("click", () => {
+    setActiveView("cards");
+  });
+}
+
+renderPilotList();
+renderPilotProfile();
 renderTrackSelector();
 renderTrackLeaderboard();
 bindViewControls();
+bindProfileControls();
 setActiveView(state.activeView);

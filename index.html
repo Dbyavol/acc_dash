@@ -33,10 +33,24 @@
         <section class="dashboard-view is-active" data-view="cards">
           <div class="section">
             <div class="section-heading">
-              <h2>Карточки пилотов</h2>
+              <h2>Список пилотов</h2>
             </div>
 
-            <div class="pilot-grid" id="pilot-grid"></div>
+            <div class="pilot-list" id="pilot-list"></div>
+          </div>
+        </section>
+
+        <section class="dashboard-view" data-view="profile">
+          <div class="section">
+            <div class="profile-shell">
+              <div class="profile-topbar">
+                <button class="button button-secondary back-button" type="button" id="back-to-list">
+                  Назад к списку
+                </button>
+              </div>
+
+              <div class="profile-layout" id="profile-layout"></div>
+            </div>
           </div>
         </section>
 
