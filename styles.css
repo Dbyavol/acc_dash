@@ -701,6 +701,25 @@ h3 {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.track-jump-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.track-jump-button:hover {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+.track-jump-time {
+  font-weight: 700;
+}
+
 @media (max-width: 1280px) {
   .pilot-toolbar,
   .pilot-list,

@@ -409,8 +409,24 @@ function renderPilotProfile() {
     .map(
       (track) => `
         <tr>
-          <td>${escapeHtml(track)}</td>
-          <td>${escapeHtml(pilot.lapTimes[track])}</td>
+          <td>
+            <button
+              class="track-jump-button"
+              type="button"
+              data-track-jump="${escapeHtml(track)}"
+            >
+              ${escapeHtml(track)}
+            </button>
+          </td>
+          <td>
+            <button
+              class="track-jump-button track-jump-time"
+              type="button"
+              data-track-jump="${escapeHtml(track)}"
+            >
+              ${escapeHtml(pilot.lapTimes[track])}
+            </button>
+          </td>
         </tr>
       `
     )
@@ -497,6 +513,16 @@ function renderPilotProfile() {
       </div>
     </div>
   `;
+
+  profileLayout.querySelectorAll("[data-track-jump]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedTrack = button.dataset.trackJump;
+      renderTrackSelector();
+      renderTrackLeaderboard();
+      setActiveView("tracks");
+      saveState();
+    });
+  });
 }
 
 function renderTrackSelector() {
