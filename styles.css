@@ -43,9 +43,9 @@ body::before {
 }
 
 .page-shell {
-  width: calc(100% - 32px);
+  width: min(100%, 1600px);
   margin: 0 auto;
-  padding: 16px 0 40px;
+  padding: 0 16px 40px;
 }
 
 .mode-switcher,
@@ -90,7 +90,7 @@ body::before {
 .nav-toggle,
 .button {
   min-height: 46px;
-  padding: 0 18px;
+  padding: 0 16px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   font: inherit;
@@ -99,15 +99,20 @@ body::before {
 }
 
 .nav-toggle {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+  min-height: 40px;
+  padding: 0 15px;
+  color: #eef3fb;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .nav-toggle.is-active,
 .button.is-active {
   color: #111;
-  background: linear-gradient(135deg, var(--gold), #fff0a9);
+  background: linear-gradient(135deg, #ffb86b, #ffe08c);
   border-color: transparent;
+  box-shadow: 0 10px 24px rgba(255, 184, 107, 0.28);
 }
 
 .nav-toggle:hover,
@@ -181,11 +186,143 @@ h3 {
 .mode-switcher {
   display: flex;
   justify-content: center;
-  padding: 8px 0 18px;
+  padding: 18px 0 18px;
+}
+
+.header-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  min-height: 78px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(18, 24, 34, 0.96), rgba(11, 16, 25, 0.96));
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: max-content;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.site-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at top, rgba(255, 107, 44, 0.95), rgba(255, 107, 44, 0.12) 60%),
+    linear-gradient(135deg, #101726, #1d2435);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 10px 24px rgba(255, 107, 44, 0.22);
+}
+
+.site-brand-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-brand-text strong {
+  display: block;
+  color: #f6f8fc;
+  font-family: "Russo One", sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+}
+
+.header-socials {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: #f3f7ff;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 180ms ease, border-color 180ms ease, filter 180ms ease;
+}
+
+.social-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+
+.social-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.social-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+  filter: brightness(1.08);
+}
+
+.social-link-discord {
+  background: linear-gradient(135deg, #5865f2, #7289ff);
+}
+
+.social-link-tiktok {
+  background: linear-gradient(135deg, #151515, #343434);
+}
+
+.social-link-twitch {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
 }
 
 .nav-links-centered {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
   justify-content: center;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.nav-links {
+  min-width: 0;
 }
 
 .main-dashboard {
@@ -503,12 +640,7 @@ h3 {
 
 .races-shell {
   display: grid;
-  gap: 18px;
   margin-top: 24px;
-}
-
-.races-overview-card {
-  margin-top: 0;
 }
 
 .races-list {
@@ -525,6 +657,12 @@ h3 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+}
+
+.race-card-winner {
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .race-toggle {
@@ -575,26 +713,6 @@ h3 {
   font-size: 1.5rem;
   line-height: 1;
   flex: 0 0 auto;
-}
-
-.race-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.race-meta-box {
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.race-meta-box strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 1rem;
-  line-height: 1.45;
 }
 
 .race-results-panel {
@@ -843,12 +961,36 @@ h3 {
 }
 
 @media (max-width: 980px) {
+  .header-bar {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 18px;
+  }
+
+  .site-brand {
+    grid-column: auto;
+    grid-row: auto;
+    justify-content: center;
+  }
+
+  .header-socials {
+    grid-column: auto;
+    grid-row: auto;
+    justify-content: center;
+    justify-self: center;
+  }
+
+  .nav-links-centered {
+    grid-column: auto;
+    grid-row: auto;
+    flex-wrap: wrap;
+  }
+
   .pilot-list,
   .tracks-layout,
   .track-map-layout,
   .track-summary,
-  .pilot-columns,
-  .race-meta-grid {
+  .pilot-columns {
     grid-template-columns: 1fr;
   }
 
@@ -860,7 +1002,7 @@ h3 {
 @media (max-width: 640px) {
   .page-shell {
     width: calc(100% - 20px);
-    padding-top: 10px;
+    padding-top: 0;
   }
 
   .mode-switcher,

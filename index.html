@@ -3,11 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ACC Pilot Cards</title>
+    <title>ACCRU Dash</title>
     <meta
       name="description"
-      content="Статичный сайт с карточками пилотов и лучшими временами на трассах для ACC."
+      content="Официальный сайт канала Assetto Corsa Competizione СНГ: профили пилотов, результаты гонок, рекорды трасс и статистика сообщества ACCRU."
     />
+    <meta property="og:title" content="ACCRU Dash" />
+    <meta
+      property="og:description"
+      content="Официальный сайт канала Assetto Corsa Competizione СНГ: профили пилотов, результаты гонок, рекорды трасс и статистика сообщества ACCRU."
+    />
+    <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,17 +24,61 @@
   </head>
   <body>
     <div class="page-shell">
-      <header class="mode-switcher">
-        <div class="nav-links nav-links-centered">
-          <button class="nav-toggle is-active" type="button" data-view-target="cards">
-            Карточки
-          </button>
-          <button class="nav-toggle" type="button" data-view-target="races">
-            Гонки
-          </button>
-          <button class="nav-toggle" type="button" data-view-target="tracks">
-            Трассы
-          </button>
+<header class="mode-switcher">
+        <div class="header-bar">
+          <div class="site-brand">
+            <div class="site-brand-mark">
+              <img class="site-brand-logo" src="assets/logo.webp" alt="ACCRU logo" />
+            </div>
+            <div class="site-brand-text">
+              <strong>ACCRU</strong>
+            </div>
+          </div>
+
+          <div class="header-socials" aria-label="Социальные сети">
+            <a class="social-link social-link-discord" href="https://discord.gg/accru" target="_blank" rel="noreferrer">
+              <span class="social-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path
+                    d="M20.3 4.4a16.7 16.7 0 0 0-4.1-1.3l-.2.4c-.2.5-.4.9-.6 1.4a15.5 15.5 0 0 0-4.7 0 15 15 0 0 0-.6-1.4l-.2-.4a16.6 16.6 0 0 0-4.1 1.3C3.2 8.4 2.5 12.2 2.8 16c1.7 1.3 3.3 2.1 4.9 2.7l1.1-1.8c-.6-.2-1.1-.5-1.6-.8l.4-.3c3 1.4 6.3 1.4 9.3 0l.4.3c-.5.3-1 .6-1.6.8l1.1 1.8c1.6-.5 3.2-1.4 4.9-2.7.4-4.4-.6-8.1-2.4-11.6ZM9.5 13.7c-.9 0-1.6-.8-1.6-1.8s.7-1.8 1.6-1.8 1.6.8 1.6 1.8-.7 1.8-1.6 1.8Zm5 0c-.9 0-1.6-.8-1.6-1.8s.7-1.8 1.6-1.8 1.6.8 1.6 1.8-.7 1.8-1.6 1.8Z"
+                  />
+                </svg>
+              </span>
+              <span class="sr-only">Discord</span>
+            </a>
+            <a class="social-link social-link-tiktok" href="https://www.tiktok.com/@accru_league" target="_blank" rel="noreferrer">
+              <span class="social-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path
+                    d="M14.8 3c.3 2 1.5 3.8 3.4 4.7.9.4 1.9.7 2.8.7v3.3c-1.3 0-2.7-.3-3.9-.9v5.2a5.8 5.8 0 1 1-5.8-5.8c.4 0 .7 0 1.1.1v3.4a2.5 2.5 0 1 0 1.9 2.4V3h2.5Z"
+                  />
+                </svg>
+              </span>
+              <span class="sr-only">TikTok</span>
+            </a>
+            <a class="social-link social-link-twitch" href="https://www.twitch.tv/acc_cis_league" target="_blank" rel="noreferrer">
+              <span class="social-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path
+                    d="M4 3 2.5 7v11h4V21l3-3h3.5L19 13V3H4Zm13 9-2.5 2.5H11L8.8 16.7V14.5H6V5.5h11V12Zm-6-4h1.8v4H11V8Zm4 0h1.8v4H15V8Z"
+                  />
+                </svg>
+              </span>
+              <span class="sr-only">Twitch</span>
+            </a>
+          </div>
+
+          <div class="nav-links nav-links-centered">
+            <button class="nav-toggle is-active" type="button" data-view-target="cards">
+              Карточки
+            </button>
+            <button class="nav-toggle" type="button" data-view-target="races">
+              Гонки
+            </button>
+            <button class="nav-toggle" type="button" data-view-target="tracks">
+              Трассы
+            </button>
+          </div>
         </div>
       </header>
 
@@ -111,18 +161,7 @@
               <h2>Гонки</h2>
             </div>
 
-            <div class="races-shell">
-              <div class="records-card races-overview-card">
-                <div class="records-card-header">
-                  <div>
-                    <p class="pilot-tag">Race Feed</p>
-                    <h3>Последние гонки</h3>
-                  </div>
-                  <div class="records-badge" id="races-count">0 гонок</div>
-                </div>
-                <p class="summary-text" id="races-updated-at">Файл data/races.json пока не обновлялся.</p>
-              </div>
-
+<div class="races-shell">
               <div class="races-list" id="races-list"></div>
             </div>
           </div>

@@ -698,14 +698,7 @@ function renderTrackLeaderboard() {
 }
 
 function renderRaces() {
-  const count = document.querySelector("#races-count");
-  const updatedAt = document.querySelector("#races-updated-at");
   const list = document.querySelector("#races-list");
-
-  count.textContent = `${racesFeed.count || 0} гонок`;
-  updatedAt.textContent = racesFeed.updated_at
-    ? `Последнее обновление: ${formatRaceDate(racesFeed.updated_at)}`
-    : "Файл data/races.json пока не обновлялся.";
 
   if (!Array.isArray(racesFeed.races) || racesFeed.races.length === 0) {
     list.innerHTML = `
@@ -749,8 +742,8 @@ function renderRaces() {
         `;
 
       const winnerLine =
-        race.winner_name && race.winner_time
-          ? `${race.winner_name} ${race.winner_number || ""} · ${race.winner_time}`.trim()
+        race.winner_name
+          ? `${race.winner_name} ${race.winner_number || ""}`.trim()
           : "Нет данных по победителю";
 
       return `
@@ -759,6 +752,7 @@ function renderRaces() {
             <div>
               <p class="pilot-tag">${escapeHtml(race.session_type || "Session")}</p>
               <h3>${escapeHtml(formatRaceTrackLabel(race))}</h3>
+              <p class="race-card-winner">Победитель: ${escapeHtml(winnerLine)}</p>
             </div>
             <div class="race-card-badges">
               <div class="race-count-badge">${escapeHtml(String(race.entry_count || entries.length || 0))} пилотов</div>
@@ -767,20 +761,6 @@ function renderRaces() {
             </div>
           </button>
           <div class="race-results-panel ${isOpen ? "is-open" : ""}">
-            <div class="race-meta-grid">
-              <div class="race-meta-box">
-                <span class="stat-label">Победитель</span>
-                <strong>${escapeHtml(winnerLine)}</strong>
-              </div>
-              <div class="race-meta-box">
-                <span class="stat-label">Лучший круг</span>
-                <strong>${escapeHtml(race.best_lap || "—")}</strong>
-              </div>
-              <div class="race-meta-box">
-                <span class="stat-label">Сессия</span>
-                <strong>${escapeHtml(race.session_type || "Race")}</strong>
-              </div>
-            </div>
             <div class="records-table-wrapper">
               <table class="records-table race-results-table">
                 <thead>
