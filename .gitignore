@@ -1,0 +1,4 @@
+.venv
+*.py
+*.json
+__pycache__/

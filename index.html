@@ -23,6 +23,9 @@
           <button class="nav-toggle is-active" type="button" data-view-target="cards">
             Карточки
           </button>
+          <button class="nav-toggle" type="button" data-view-target="races">
+            Гонки
+          </button>
           <button class="nav-toggle" type="button" data-view-target="tracks">
             Трассы
           </button>
@@ -102,6 +105,29 @@
           </div>
         </section>
 
+        <section class="dashboard-view" data-view="races">
+          <div class="section">
+            <div class="section-heading">
+              <h2>Гонки</h2>
+            </div>
+
+            <div class="races-shell">
+              <div class="records-card races-overview-card">
+                <div class="records-card-header">
+                  <div>
+                    <p class="pilot-tag">Race Feed</p>
+                    <h3>Последние гонки</h3>
+                  </div>
+                  <div class="records-badge" id="races-count">0 гонок</div>
+                </div>
+                <p class="summary-text" id="races-updated-at">Файл data/races.json пока не обновлялся.</p>
+              </div>
+
+              <div class="races-list" id="races-list"></div>
+            </div>
+          </div>
+        </section>
+
         <section class="dashboard-view" data-view="tracks">
           <div class="section section-tracks">
             <div class="section-heading">
@@ -152,6 +178,7 @@
     </div>
 
     <script src="data.js"></script>
+    <script src="data/races.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
