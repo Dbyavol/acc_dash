@@ -733,6 +733,12 @@ h3 {
   text-align: center;
 }
 
+.race-best-lap {
+  color: #d8a8ff;
+  font-weight: 800;
+  text-shadow: 0 0 18px rgba(186, 104, 255, 0.22);
+}
+
 .tracks-layout {
   display: grid;
   grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);

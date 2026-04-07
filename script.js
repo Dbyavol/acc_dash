@@ -156,6 +156,52 @@ function formatRaceTotalTime(value) {
   return value || "—";
 }
 
+function formatRaceGapToLeader(entry, leaderEntry) {
+  if (!leaderEntry) {
+    return "—";
+  }
+
+  const leaderLaps = Number(leaderEntry.lap_count ?? 0);
+  const entryLaps = Number(entry.lap_count ?? 0);
+
+  if (leaderLaps > 0 && entryLaps > 0 && leaderLaps !== entryLaps) {
+    const lapGap = leaderLaps - entryLaps;
+    if (lapGap <= 0) {
+      return "—";
+    }
+
+    const mod10 = lapGap % 10;
+    const mod100 = lapGap % 100;
+    let lapWord = "кругов";
+
+    if (mod10 === 1 && mod100 !== 11) {
+      lapWord = "круг";
+    } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+      lapWord = "круга";
+    }
+
+    return `+${lapGap} ${lapWord}`;
+  }
+
+  const leaderTimeMs = leaderEntry.total_time_ms ?? null;
+  const entryTimeMs = entry.total_time_ms ?? null;
+
+  if (leaderTimeMs === null || entryTimeMs === null) {
+    return "—";
+  }
+
+  const gapMs = Math.max(0, entryTimeMs - leaderTimeMs);
+  const minutes = Math.floor(gapMs / 60000);
+  const seconds = Math.floor((gapMs % 60000) / 1000);
+  const millis = String(gapMs % 1000).padStart(3, "0");
+
+  if (minutes > 0) {
+    return `+${minutes}:${String(seconds).padStart(2, "0")}.${millis}`;
+  }
+
+  return `+${seconds}.${millis}`;
+}
+
 const trackImageMap = {
   Barcelona: "assets/tracks/barcelona.png",
   "Brands Hatch": "assets/tracks/brands-hatch.svg",
@@ -720,6 +766,18 @@ function renderRaces() {
       const raceId = getRaceId(race);
       const isOpen = state.selectedRaceId === raceId;
       const entries = Array.isArray(race.entries) ? race.entries : [];
+      const leaderEntry = entries[0] || null;
+      const bestLapMs = entries.reduce((best, entry) => {
+        if (entry.best_lap_ms === null || entry.best_lap_ms === undefined) {
+          return best;
+        }
+
+        if (best === null || entry.best_lap_ms < best) {
+          return entry.best_lap_ms;
+        }
+
+        return best;
+      }, null);
       const rows = entries.length
         ? entries
             .map(
@@ -729,15 +787,16 @@ function renderRaces() {
                   <td>${escapeHtml(entry.driver_name || "Неизвестный пилот")}</td>
                   <td>${escapeHtml(entry.race_number || "—")}</td>
                   <td>${escapeHtml(String(entry.lap_count ?? "—"))}</td>
-                  <td>${escapeHtml(entry.best_lap || "—")}</td>
+                  <td class="${entry.best_lap_ms !== null && entry.best_lap_ms === bestLapMs ? "race-best-lap" : ""}">${escapeHtml(entry.best_lap || "—")}</td>
                   <td>${escapeHtml(formatRaceTotalTime(entry.total_time))}</td>
+                  <td>${escapeHtml(formatRaceGapToLeader(entry, leaderEntry))}</td>
                 </tr>
               `
             )
             .join("")
         : `
           <tr>
-            <td colspan="6" class="race-results-empty">Результаты этой гонки пока не загружены.</td>
+            <td colspan="7" class="race-results-empty">Результаты этой гонки пока не загружены.</td>
           </tr>
         `;
 
@@ -771,6 +830,7 @@ function renderRaces() {
                     <th>Круги</th>
                     <th>Лучший круг</th>
                     <th>Общее время</th>
+                    <th>Отставание</th>
                   </tr>
                 </thead>
                 <tbody>${rows}</tbody>
