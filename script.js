@@ -47,29 +47,43 @@ function formatGap(gapMs) {
   return `+${seconds}.${millis}`;
 }
 
-const tracks = Object.keys(pilots[0].lapTimes);
-const sortedPilots = [...pilots].sort((left, right) => {
-  const leftNumber = Number(left.number.replace("#", ""));
-  const rightNumber = Number(right.number.replace("#", ""));
+const siteData = window.__ACC_SITE_DATA__ || {};
+const dataPilots =
+  Array.isArray(siteData.pilots) && siteData.pilots.length
+    ? siteData.pilots
+    : pilots;
+const tracks =
+  Array.isArray(siteData.tracks) && siteData.tracks.length
+    ? siteData.tracks
+    : Object.keys(dataPilots[0].lapTimes);
+const sortedPilots = [...dataPilots].sort((left, right) => {
+  const leftNumber = Number(String(left.number || "").replace("#", ""));
+  const rightNumber = Number(String(right.number || "").replace("#", ""));
 
-  return leftNumber - rightNumber;
+  return (Number.isNaN(leftNumber) ? 9999 : leftNumber) - (Number.isNaN(rightNumber) ? 9999 : rightNumber);
 });
 
 const state = {
   activeView: "cards",
   selectedTrack: tracks[0],
-  selectedPilotNumber: sortedPilots[0]?.number || null,
+  selectedPilotNumber: sortedPilots[0]?.id || null,
   selectedRaceId: null,
+  selectedRaceSessions: {},
   listView: "compact",
   searchQuery: "",
+  trackSearchQuery: "",
+  raceSearchQuery: "",
+  raceDateFrom: "",
+  raceDateTo: "",
   skillFilter: "all",
-  sortBy: "number-asc"
+  sortBy: "number-asc",
+  showEmptyLapTimes: false
 };
 
 let racesFeed = {
-  updated_at: null,
-  count: 0,
-  races: []
+  updated_at: siteData.updated_at || null,
+  count: Array.isArray(siteData.races) ? siteData.races.length : 0,
+  races: Array.isArray(siteData.races) ? siteData.races : []
 };
 
 function loadState() {
@@ -92,13 +106,17 @@ function loadState() {
 
     if (
       typeof saved.selectedPilotNumber === "string" &&
-      sortedPilots.some((pilot) => pilot.number === saved.selectedPilotNumber)
+      sortedPilots.some((pilot) => pilot.id === saved.selectedPilotNumber)
     ) {
       state.selectedPilotNumber = saved.selectedPilotNumber;
     }
 
     if (typeof saved.selectedRaceId === "string") {
       state.selectedRaceId = saved.selectedRaceId;
+    }
+
+    if (saved.selectedRaceSessions && typeof saved.selectedRaceSessions === "object") {
+      state.selectedRaceSessions = saved.selectedRaceSessions;
     }
 
     if (typeof saved.listView === "string") {
@@ -109,12 +127,32 @@ function loadState() {
       state.searchQuery = saved.searchQuery;
     }
 
+    if (typeof saved.trackSearchQuery === "string") {
+      state.trackSearchQuery = saved.trackSearchQuery;
+    }
+
+    if (typeof saved.raceSearchQuery === "string") {
+      state.raceSearchQuery = saved.raceSearchQuery;
+    }
+
+    if (typeof saved.raceDateFrom === "string") {
+      state.raceDateFrom = saved.raceDateFrom;
+    }
+
+    if (typeof saved.raceDateTo === "string") {
+      state.raceDateTo = saved.raceDateTo;
+    }
+
     if (typeof saved.skillFilter === "string") {
       state.skillFilter = saved.skillFilter;
     }
 
     if (typeof saved.sortBy === "string") {
       state.sortBy = saved.sortBy;
+    }
+
+    if (typeof saved.showEmptyLapTimes === "boolean") {
+      state.showEmptyLapTimes = saved.showEmptyLapTimes;
     }
   } catch (error) {
     console.warn("Не удалось восстановить состояние интерфейса.", error);
@@ -130,6 +168,10 @@ function saveState() {
 }
 
 function getRaceId(race) {
+  if (race.id) {
+    return race.id;
+  }
+
   if (race.session_file) {
     return race.session_file;
   }
@@ -154,6 +196,134 @@ function formatRaceTrackLabel(race) {
 
 function formatRaceTotalTime(value) {
   return value || "—";
+}
+
+function formatSessionCode(value) {
+  const labels = {
+    FP: "FP",
+    Q: "Q",
+    R: "R",
+    race: "R",
+    qualifying: "Q",
+    practice: "FP"
+  };
+
+  return labels[value] || value || "—";
+}
+
+function formatSessionHint(value) {
+  const labels = {
+    FP: "Время поставлено в практике",
+    Q: "Время поставлено в квалификации",
+    R: "Время поставлено в гонке",
+    race: "Время поставлено в гонке",
+    qualifying: "Время поставлено в квалификации",
+    practice: "Время поставлено в практике"
+  };
+
+  return labels[value] || "Источник времени не указан";
+}
+
+function getSessionChipClass(value) {
+  const type = formatSessionCode(value).toLowerCase();
+
+  if (["r", "q", "fp"].includes(type)) {
+    return `session-source-chip-${type}`;
+  }
+
+  return "session-source-chip-unknown";
+}
+
+function getRaceSession(race) {
+  const sessions = race.sessions || {};
+  const requestedType = state.selectedRaceSessions[race.id] || "race";
+
+  if (requestedType === "qualifying" && sessions.qualifying) {
+    return { type: "qualifying", label: "Квалификация", session: sessions.qualifying };
+  }
+
+  if (sessions.race) {
+    return { type: "race", label: "Гонка", session: sessions.race };
+  }
+
+  if (sessions.qualifying) {
+    return { type: "qualifying", label: "Квалификация", session: sessions.qualifying };
+  }
+
+  return { type: "race", label: "Гонка", session: race };
+}
+
+function getRaceSessionEntries(race) {
+  const { session } = getRaceSession(race);
+  const entries = Array.isArray(session.entries) ? session.entries : [];
+
+  return entries.filter((entry) => Number(entry.lap_count ?? 0) > 0);
+}
+
+function openPilotProfile(pilotId) {
+  if (!pilotId || !sortedPilots.some((pilot) => pilot.id === pilotId)) {
+    return;
+  }
+
+  state.selectedPilotNumber = pilotId;
+  renderPilotProfile();
+  setActiveView("profile");
+  saveState();
+}
+
+function clearRaceFilters() {
+  state.raceSearchQuery = "";
+  state.raceDateFrom = "";
+  state.raceDateTo = "";
+
+  const raceSearch = document.querySelector("#race-search");
+  const raceDateFrom = document.querySelector("#race-date-from");
+  const raceDateTo = document.querySelector("#race-date-to");
+
+  if (raceSearch) {
+    raceSearch.value = "";
+  }
+
+  if (raceDateFrom) {
+    raceDateFrom.value = "";
+  }
+
+  if (raceDateTo) {
+    raceDateTo.value = "";
+  }
+}
+
+function scrollToRaceCard(raceId) {
+  requestAnimationFrame(() => {
+    const escapeSelector =
+      window.CSS && typeof window.CSS.escape === "function"
+        ? window.CSS.escape(raceId)
+        : raceId.replace(/["\\]/g, "\\$&");
+    const card = document.querySelector(`[data-race-card-id="${escapeSelector}"]`);
+
+    if (!card) {
+      return;
+    }
+
+    card.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
+}
+
+function openRaceResults(raceId, sessionType = "race") {
+  if (!raceId || !racesFeed.races.some((race) => getRaceId(race) === raceId)) {
+    return;
+  }
+
+  clearRaceFilters();
+  state.selectedRaceId = raceId;
+  state.selectedRaceSessions[raceId] = sessionType;
+  renderRaces();
+  setActiveView("races");
+  scrollToRaceCard(raceId);
+  saveState();
 }
 
 function formatRaceGapToLeader(entry, leaderEntry) {
@@ -312,7 +482,8 @@ const trackCountryMap = {
 };
 
 function getPilotNumberValue(pilot) {
-  return Number(pilot.number.replace("#", ""));
+  const value = Number(String(pilot.number || "").replace("#", ""));
+  return Number.isNaN(value) ? 9999 : value;
 }
 
 function getFilteredPilots() {
@@ -391,26 +562,17 @@ function buildTrackLeaderboard(track) {
       const timeMs = timeToMs(time);
 
       return {
+        id: pilot.id,
         name: pilot.name,
         number: pilot.number,
         skill: pilot.skill,
         time,
-        timeMs
+        timeMs,
+        source: pilot.lapTimeSources?.[track] || null
       };
     })
+    .filter((entry) => entry.timeMs !== null)
     .sort((left, right) => {
-      if (left.timeMs === null && right.timeMs === null) {
-        return left.name.localeCompare(right.name, "ru");
-      }
-
-      if (left.timeMs === null) {
-        return 1;
-      }
-
-      if (right.timeMs === null) {
-        return -1;
-      }
-
       return left.timeMs - right.timeMs;
     });
 }
@@ -426,6 +588,39 @@ function formatRaceDate(value) {
   }
 
   return parsed.toLocaleString("ru-RU");
+}
+
+function getRaceDateKey(race) {
+  const parsed = new Date(race.date);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+function getFilteredRaces() {
+  const query = state.raceSearchQuery.trim().toLowerCase();
+
+  return racesFeed.races.filter((race) => {
+    const track = formatRaceTrackLabel(race).toLowerCase();
+    const raceDate = getRaceDateKey(race);
+
+    if (query && !track.includes(query)) {
+      return false;
+    }
+
+    if (state.raceDateFrom && raceDate && raceDate < state.raceDateFrom) {
+      return false;
+    }
+
+    if (state.raceDateTo && raceDate && raceDate > state.raceDateTo) {
+      return false;
+    }
+
+    return true;
+  });
 }
 
 function renderPilotList() {
@@ -462,7 +657,7 @@ function renderPilotList() {
           : "";
 
       return `
-        <button class="pilot-list-item" type="button" data-pilot-number="${escapeHtml(pilot.number)}">
+        <button class="pilot-list-item" type="button" data-pilot-id="${escapeHtml(pilot.id)}">
           <div class="pilot-list-main">
             <span class="pilot-list-name">${escapeHtml(pilot.name)}</span>
             ${compactMeta}
@@ -474,9 +669,9 @@ function renderPilotList() {
     })
     .join("");
 
-  pilotList.querySelectorAll("[data-pilot-number]").forEach((button) => {
+  pilotList.querySelectorAll("[data-pilot-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedPilotNumber = button.dataset.pilotNumber;
+      state.selectedPilotNumber = button.dataset.pilotId;
       renderPilotProfile();
       setActiveView("profile");
       saveState();
@@ -486,7 +681,7 @@ function renderPilotList() {
 
 function renderPilotProfile() {
   const profileLayout = document.querySelector("#profile-layout");
-  const pilot = sortedPilots.find((entry) => entry.number === state.selectedPilotNumber);
+  const pilot = sortedPilots.find((entry) => entry.id === state.selectedPilotNumber);
 
   if (!pilot) {
     profileLayout.innerHTML = "";
@@ -502,7 +697,10 @@ function renderPilotProfile() {
     `
     : "";
 
-  const lapRows = tracks
+  const completedTracks = tracks.filter((track) => timeToMs(pilot.lapTimes[track]) !== null);
+  const lapTracks = state.showEmptyLapTimes ? tracks : completedTracks;
+  const lapRows = lapTracks.length
+    ? lapTracks
     .map(
       (track) => `
         <tr>
@@ -527,7 +725,39 @@ function renderPilotProfile() {
         </tr>
       `
     )
-    .join("");
+    .join("")
+    : `
+      <tr>
+        <td colspan="2" class="race-results-empty">У пилота пока нет зафиксированных времен.</td>
+      </tr>
+    `;
+  const recentResultRows = Array.isArray(pilot.recentResults) && pilot.recentResults.length
+    ? pilot.recentResults
+        .map(
+          (result) => `
+            <tr>
+              <td>${escapeHtml(formatRaceDate(result.date))}</td>
+              <td>
+                <button
+                  class="inline-nav-button"
+                  type="button"
+                  data-race-jump="${escapeHtml(result.race_id)}"
+                >
+                  ${escapeHtml(result.track || "—")}
+                </button>
+              </td>
+              <td>${escapeHtml(result.position ? `P${result.position}` : "—")}</td>
+              <td>${escapeHtml(String(result.lap_count ?? "—"))}</td>
+              <td>${escapeHtml(result.best_lap || "—")}</td>
+            </tr>
+          `
+        )
+        .join("")
+    : `
+      <tr>
+        <td colspan="5" class="race-results-empty">Недавних результатов пока нет.</td>
+      </tr>
+    `;
 
   profileLayout.innerHTML = `
     <article class="profile-card">
@@ -550,6 +780,10 @@ function renderPilotProfile() {
         <div class="stat-box">
           <span class="stat-label">Лицензия</span>
           <strong>${escapeHtml(pilot.license || "Не указана")}</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Трассы</span>
+          <strong>${completedTracks.length}/${tracks.length}</strong>
         </div>
       </div>
 
@@ -594,7 +828,12 @@ function renderPilotProfile() {
           <p class="pilot-tag">Lap Timing</p>
           <h3>Времена кругов</h3>
         </div>
-        <div class="records-badge">${tracks.length} трасс</div>
+        <div class="lap-card-actions">
+          <div class="records-badge">${completedTracks.length}/${tracks.length} трасс</div>
+          <button class="button lap-empty-toggle" type="button" data-toggle-empty-laps>
+            ${state.showEmptyLapTimes ? "Убрать пустые" : "Показать пустые"}
+          </button>
+        </div>
       </div>
 
       <div class="records-table-wrapper">
@@ -609,6 +848,31 @@ function renderPilotProfile() {
         </table>
       </div>
     </div>
+
+    <div class="records-card profile-results-card">
+      <div class="records-card-header">
+        <div>
+          <p class="pilot-tag">Race History</p>
+          <h3>Недавние результаты</h3>
+        </div>
+        <div class="records-badge">${pilot.stats?.races || 0} гонок</div>
+      </div>
+
+      <div class="records-table-wrapper">
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Трасса</th>
+              <th>Финиш</th>
+              <th>Круги</th>
+              <th>Лучший круг</th>
+            </tr>
+          </thead>
+          <tbody>${recentResultRows}</tbody>
+        </table>
+      </div>
+    </div>
   `;
 
   profileLayout.querySelectorAll("[data-track-jump]").forEach((button) => {
@@ -620,13 +884,29 @@ function renderPilotProfile() {
       saveState();
     });
   });
+
+  profileLayout.querySelector("[data-toggle-empty-laps]")?.addEventListener("click", () => {
+    state.showEmptyLapTimes = !state.showEmptyLapTimes;
+    renderPilotProfile();
+    saveState();
+  });
+
+  profileLayout.querySelectorAll("[data-race-jump]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openRaceResults(button.dataset.raceJump, "race");
+    });
+  });
 }
 
 function renderTrackSelector() {
   const selector = document.querySelector("#track-selector");
-  const bestRecords = buildTrackRecords();
+  const query = state.trackSearchQuery.trim().toLowerCase();
+  const bestRecords = buildTrackRecords().filter((record) =>
+    record.track.toLowerCase().includes(query)
+  );
 
-  selector.innerHTML = bestRecords
+  selector.innerHTML = bestRecords.length
+    ? bestRecords
     .map((record) => {
       const isActive = record.track === state.selectedTrack;
 
@@ -655,7 +935,12 @@ function renderTrackSelector() {
         </button>
       `;
     })
-    .join("");
+    .join("")
+    : `
+      <div class="track-search-empty">
+        По запросу "${escapeHtml(state.trackSearchQuery)}" трасс не найдено.
+      </div>
+    `;
 
   selector.querySelectorAll("[data-track]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -720,31 +1005,57 @@ function renderTrackLeaderboard() {
     <div class="summary-card compact-summary">
       <p class="pilot-tag">Заполнено результатов</p>
       <h3>${validTimes.length}</h3>
-      <p class="summary-text">из ${leaderboard.length} пилотов имеют время на этой трассе.</p>
+      <p class="summary-text">из ${sortedPilots.length} пилотов имеют время на этой трассе.</p>
     </div>
   `;
 
-  body.innerHTML = leaderboard
+  body.innerHTML = leaderboard.length
+    ? leaderboard
     .map((entry, index) => {
-      const place = entry.timeMs === null ? "—" : String(index + 1);
-      const time = entry.timeMs === null ? "Нет времени" : entry.time;
-      const gap = entry.timeMs === null || leaderTime === null ? "—" : formatGap(entry.timeMs - leaderTime);
+      const place = String(index + 1);
+      const gap = leaderTime === null ? "—" : formatGap(entry.timeMs - leaderTime);
+      const sessionType = entry.source?.session_type;
 
       return `
         <tr>
           <td>${place}</td>
-          <td>${escapeHtml(entry.name)}</td>
+          <td>
+            <button
+              class="inline-nav-button"
+              type="button"
+              data-track-pilot-jump="${escapeHtml(entry.id)}"
+            >
+              ${escapeHtml(entry.name)}
+            </button>
+          </td>
           <td>${escapeHtml(entry.number)}</td>
-          <td>${escapeHtml(time)}</td>
+          <td>${escapeHtml(entry.time)}</td>
           <td>${escapeHtml(gap)}</td>
+          <td>
+            <span class="session-source-chip ${escapeHtml(getSessionChipClass(sessionType))}" data-tooltip="${escapeHtml(formatSessionHint(sessionType))}">
+              ${escapeHtml(formatSessionCode(sessionType))}
+            </span>
+          </td>
         </tr>
       `;
     })
-    .join("");
+    .join("")
+    : `
+      <tr>
+        <td colspan="6" class="race-results-empty">На этой трассе пока нет пилотов с зафиксированным временем.</td>
+      </tr>
+    `;
+
+  body.querySelectorAll("[data-track-pilot-jump]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openPilotProfile(button.dataset.trackPilotJump);
+    });
+  });
 }
 
 function renderRaces() {
   const list = document.querySelector("#races-list");
+  const filteredRaces = getFilteredRaces();
 
   if (!Array.isArray(racesFeed.races) || racesFeed.races.length === 0) {
     list.innerHTML = `
@@ -756,16 +1067,27 @@ function renderRaces() {
     return;
   }
 
-  const raceIds = racesFeed.races.map(getRaceId);
+  if (!filteredRaces.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>Гонки не найдены</h3>
+        <p>Попробуйте изменить название трассы или диапазон дат.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const raceIds = filteredRaces.map(getRaceId);
   if (state.selectedRaceId && !raceIds.includes(state.selectedRaceId)) {
     state.selectedRaceId = null;
   }
 
-  list.innerHTML = racesFeed.races
+  list.innerHTML = filteredRaces
     .map((race) => {
       const raceId = getRaceId(race);
       const isOpen = state.selectedRaceId === raceId;
-      const entries = Array.isArray(race.entries) ? race.entries : [];
+      const activeSession = getRaceSession(race);
+      const entries = getRaceSessionEntries(race);
       const leaderEntry = entries[0] || null;
       const bestLapMs = entries.reduce((best, entry) => {
         if (entry.best_lap_ms === null || entry.best_lap_ms === undefined) {
@@ -784,7 +1106,15 @@ function renderRaces() {
               (entry) => `
                 <tr>
                   <td>${escapeHtml(entry.position)}</td>
-                  <td>${escapeHtml(entry.driver_name || "Неизвестный пилот")}</td>
+                  <td>
+                    <button
+                      class="inline-nav-button"
+                      type="button"
+                      data-pilot-jump="${escapeHtml(entry.pilot_id)}"
+                    >
+                      ${escapeHtml(entry.driver_name || "Неизвестный пилот")}
+                    </button>
+                  </td>
                   <td>${escapeHtml(entry.race_number || "—")}</td>
                   <td>${escapeHtml(String(entry.lap_count ?? "—"))}</td>
                   <td class="${entry.best_lap_ms !== null && entry.best_lap_ms === bestLapMs ? "race-best-lap" : ""}">${escapeHtml(entry.best_lap || "—")}</td>
@@ -806,10 +1136,10 @@ function renderRaces() {
           : "Нет данных по победителю";
 
       return `
-        <article class="records-card race-card ${isOpen ? "is-open" : ""}">
+        <article class="records-card race-card ${isOpen ? "is-open" : ""}" data-race-card-id="${escapeHtml(raceId)}">
           <button class="race-card-top race-toggle" type="button" data-race-id="${escapeHtml(raceId)}">
             <div>
-              <p class="pilot-tag">${escapeHtml(race.session_type || "Session")}</p>
+              <p class="pilot-tag">Race Weekend</p>
               <h3>${escapeHtml(formatRaceTrackLabel(race))}</h3>
               <p class="race-card-winner">Победитель: ${escapeHtml(winnerLine)}</p>
             </div>
@@ -820,6 +1150,26 @@ function renderRaces() {
             </div>
           </button>
           <div class="race-results-panel ${isOpen ? "is-open" : ""}">
+            <div class="race-session-switch">
+              <button
+                class="race-session-button ${activeSession.type === "race" ? "is-active" : ""}"
+                type="button"
+                data-race-session-id="${escapeHtml(raceId)}"
+                data-race-session-type="race"
+                ${race.sessions?.race ? "" : "disabled"}
+              >
+                Гонка
+              </button>
+              <button
+                class="race-session-button ${activeSession.type === "qualifying" ? "is-active" : ""}"
+                type="button"
+                data-race-session-id="${escapeHtml(raceId)}"
+                data-race-session-type="qualifying"
+                ${race.sessions?.qualifying ? "" : "disabled"}
+              >
+                Квалификация
+              </button>
+            </div>
             <div class="records-table-wrapper">
               <table class="records-table race-results-table">
                 <thead>
@@ -850,6 +1200,21 @@ function renderRaces() {
       saveState();
     });
   });
+
+  list.querySelectorAll("[data-race-session-id]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.selectedRaceSessions[button.dataset.raceSessionId] = button.dataset.raceSessionType;
+      renderRaces();
+      saveState();
+    });
+  });
+
+  list.querySelectorAll("[data-pilot-jump]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openPilotProfile(button.dataset.pilotJump);
+    });
+  });
 }
 
 async function loadRacesFeed() {
@@ -860,15 +1225,20 @@ async function loadRacesFeed() {
   }
 
   try {
-    const response = await fetch("data/races.json", { cache: "no-store" });
+    const response = await fetch("data/site-data.json", { cache: "no-store" });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    racesFeed = await response.json();
+    const payload = await response.json();
+    racesFeed = {
+      updated_at: payload.updated_at,
+      count: Array.isArray(payload.races) ? payload.races.length : 0,
+      races: Array.isArray(payload.races) ? payload.races : []
+    };
   } catch (error) {
-    console.warn("Не удалось загрузить data/races.json", error);
+    console.warn("Не удалось загрузить data/site-data.json", error);
     racesFeed = {
       updated_at: null,
       count: 0,
@@ -954,6 +1324,76 @@ function bindPilotToolbar() {
   });
 }
 
+function bindTrackSearch() {
+  const trackSearch = document.querySelector("#track-search");
+
+  if (!trackSearch) {
+    return;
+  }
+
+  trackSearch.value = state.trackSearchQuery;
+  trackSearch.addEventListener("input", (event) => {
+    state.trackSearchQuery = event.target.value;
+    renderTrackSelector();
+    saveState();
+  });
+}
+
+function bindRaceFilters() {
+  const raceSearch = document.querySelector("#race-search");
+  const raceDateFrom = document.querySelector("#race-date-from");
+  const raceDateTo = document.querySelector("#race-date-to");
+  const raceFilterReset = document.querySelector("#race-filter-reset");
+
+  if (!raceSearch || !raceDateFrom || !raceDateTo || !raceFilterReset) {
+    return;
+  }
+
+  raceSearch.value = state.raceSearchQuery;
+  raceDateFrom.value = state.raceDateFrom;
+  raceDateTo.value = state.raceDateTo;
+
+  raceSearch.addEventListener("input", (event) => {
+    state.raceSearchQuery = event.target.value;
+    renderRaces();
+    saveState();
+  });
+
+  raceDateFrom.addEventListener("change", (event) => {
+    state.raceDateFrom = event.target.value;
+    renderRaces();
+    saveState();
+  });
+
+  raceDateTo.addEventListener("change", (event) => {
+    state.raceDateTo = event.target.value;
+    renderRaces();
+    saveState();
+  });
+
+  raceFilterReset.addEventListener("click", () => {
+    clearRaceFilters();
+    renderRaces();
+    saveState();
+  });
+}
+
+function bindRaceScrollTop() {
+  const button = document.querySelector("#race-scroll-top");
+  const racesView = document.querySelector('[data-view="races"]');
+
+  if (!button || !racesView) {
+    return;
+  }
+
+  button.addEventListener("click", () => {
+    racesView.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
+}
+
 loadState();
 renderPilotList();
 renderPilotProfile();
@@ -963,5 +1403,8 @@ renderRaces();
 bindViewControls();
 bindProfileControls();
 bindPilotToolbar();
+bindTrackSearch();
+bindRaceFilters();
+bindRaceScrollTop();
 setActiveView(state.activeView);
 loadRacesFeed();

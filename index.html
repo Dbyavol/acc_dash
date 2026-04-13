@@ -157,20 +157,56 @@
 
         <section class="dashboard-view" data-view="races">
           <div class="section">
-            <div class="section-heading">
+            <div class="section-heading races-heading">
               <h2>Гонки</h2>
+              <div class="race-filters" aria-label="Фильтры гонок">
+                <label class="race-filter-field" for="race-search">
+                  <span>Поиск трассы</span>
+                  <input
+                    class="toolbar-input"
+                    id="race-search"
+                    type="search"
+                    placeholder="Например: Spa"
+                    autocomplete="off"
+                  />
+                </label>
+                <label class="race-filter-field" for="race-date-from">
+                  <span>Дата от</span>
+                  <input class="toolbar-input" id="race-date-from" type="date" />
+                </label>
+                <label class="race-filter-field" for="race-date-to">
+                  <span>Дата до</span>
+                  <input class="toolbar-input" id="race-date-to" type="date" />
+                </label>
+                <button class="button race-filter-reset" type="button" id="race-filter-reset">
+                  Сбросить фильтры
+                </button>
+              </div>
             </div>
 
-<div class="races-shell">
+            <div class="races-shell">
               <div class="races-list" id="races-list"></div>
             </div>
+            <button class="race-scroll-top" type="button" id="race-scroll-top" aria-label="Наверх к фильтрам гонок">
+              ↑
+            </button>
           </div>
         </section>
 
         <section class="dashboard-view" data-view="tracks">
           <div class="section section-tracks">
-            <div class="section-heading">
+            <div class="section-heading tracks-heading">
               <h2>Результаты по трассам</h2>
+              <label class="track-search-field" for="track-search">
+                <span>Поиск трассы</span>
+                <input
+                  class="toolbar-input"
+                  id="track-search"
+                  type="search"
+                  placeholder="Например: Monza"
+                  autocomplete="off"
+                />
+              </label>
             </div>
 
             <div class="tracks-layout">
@@ -203,6 +239,7 @@
                           <th>Номер</th>
                           <th>Время</th>
                           <th>Отставание</th>
+                          <th>Сессия</th>
                         </tr>
                       </thead>
                       <tbody id="track-results-body"></tbody>
@@ -217,7 +254,7 @@
     </div>
 
     <script src="data.js"></script>
-    <script src="data/races.js"></script>
+    <script src="data/site-data.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

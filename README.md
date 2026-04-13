@@ -1,67 +1,53 @@
-# ACC Pilot Cards
+# ACCRU Dash
 
-Статичный сайт для GitHub Pages с двумя разделами:
+Статичный сайт для GitHub Pages: профили пилотов, результаты гонок, квалификации и лучшие круги по трассам.
 
-- карточки пилотов;
-- лучшие времена на трассах.
+## Данные
 
-Теперь сайт работает в двух режимах:
+Основные данные генерируются скриптом:
 
-- `Карточки` показывает состав пилотов;
-- `Трассы` открывает список трасс и таблицу результатов по выбранной трассе.
+```powershell
+.\.venv\Scripts\python.exe scripts\fetch_races.py
+```
 
-## Где редактировать данные
+Если все JSON-сессии уже выгружены с сервера в локальную папку, API трогать не нужно. Для полного пересбора профилей, лучших времен и гонок из локальных файлов:
 
-Все пилоты и их времена хранятся в `data.js`.
+```powershell
+.\.venv\Scripts\python.exe scripts\rebuild_from_sessions.py --sessions-dir data\acc_results_export_2026-04-13_22_24 --since 2026-03-20
+```
 
-- чтобы добавить нового пилота, создайте еще один объект в массиве `pilots`;
-- чтобы поменять времена, обновите значения в `lapTimes`;
-- карточки и таблица рекордов на странице пересобираются автоматически через `script.js`.
+Скрипт читает FP/Q/R-сессии, группирует гонки с ближайшей предыдущей квалификацией на той же трассе, пересчитывает лучших пилотов/времена и обновляет файлы для сайта.
 
-## Python API Client
+После запуска появляются:
 
-В репозитории есть Python-скрипт `scripts/acc_server_api.py` для работы с Emperor Servers ACC Server Manager Web API.
+- `data/pilots/<pilot_id>.json` - отдельный JSON на каждого пилота.
+- `data/races/<race_id>.json` - отдельный JSON на каждый гоночный уикенд.
+- `data/sessions-index.json` - индекс всех найденных практик, квалификаций и гонок.
+- `data/history-summary.json` - краткая сводка последнего пересбора.
+- `data/site-data.json` - общий JSON для сайта.
+- `data/site-data.js` - тот же общий набор данных для локального открытия `index.html` без веб-сервера.
 
-Сначала создайте свой конфиг на основе примера:
+Сайт читает именно `data/site-data.js`, поэтому для GitHub Pages достаточно залить статические файлы и папку `data`.
 
-- скопируйте `scripts/acc_server_api_config.example.json` в `scripts/acc_server_api_config.json`
-- заполните `base_url`
-- при необходимости добавьте `headers`, `cookies` и `defaults`
+## Как работает генерация
 
-Примеры:
+- Скрипт читает список результатов через Emperor Servers ACC Server Manager API.
+- Для каждой race-сессии `R` ищет ближайшую предыдущую квалификацию `Q` на той же трассе.
+- Пилоты идентифицируются по `playerId`/Steam ID. Если его нет, используется fallback-id на основе имени пилота.
+- Карточки пилотов, лучшие круги и недавние результаты собираются автоматически из результатов гонок и квалификаций.
 
-- `python scripts/acc_server_api.py healthcheck`
-- `python scripts/acc_server_api.py results`
-- `python scripts/acc_server_api.py races`
-- `python scripts/acc_server_api.py standings`
-- `python scripts/acc_server_api.py export-races`
+## Публикация
 
-## Раздел Гонок
+Для GitHub Pages нужны:
 
-Под раздел гонок подготовлены:
+- `index.html`
+- `styles.css`
+- `script.js`
+- `data.js` пока оставлен как fallback
+- `data/site-data.js`
+- `data/site-data.json`
+- `data/pilots/`
+- `data/races/`
+- `assets/`
 
-- `data/races.json` — файл данных для фронтенда;
-- `scripts/fetch_races.py` — скрипт, который забирает последние гонки из API и обновляет `data/races.json`.
-
-После заполнения `scripts/acc_server_api_config.json` достаточно запускать:
-
-- `python scripts/fetch_races.py`
-
-Сайт сам читает `data/races.json` и показывает гонки во вкладке `Гонки`.
-
-Если API не открыт публично, можно передать заголовки и cookies:
-
-- `--header "X-Example=VALUE"`
-- `--cookie "session=VALUE"`
-
-## Запуск локально
-
-Откройте `index.html` в браузере.
-
-## Публикация на GitHub Pages
-
-1. Загрузите файлы репозитория на GitHub.
-2. Откройте `Settings -> Pages`.
-3. В `Build and deployment` выберите `Deploy from a branch`.
-4. Укажите ветку с сайтом и папку `/ (root)`.
-5. Сохраните настройки и дождитесь публикации.
+Python-скрипты нужны только локально или на машине/сервере, который обновляет JSON.

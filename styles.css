@@ -19,6 +19,42 @@ html {
   scroll-behavior: smooth;
 }
 
+@keyframes view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes table-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -40,6 +76,7 @@ body::before {
   background-size: 48px 48px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 90%);
   pointer-events: none;
+  animation: view-enter 900ms ease both;
 }
 
 .page-shell {
@@ -84,7 +121,13 @@ body::before {
 .nav-toggle,
 .button,
 .track-button {
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
 }
 
 .nav-toggle,
@@ -119,6 +162,23 @@ body::before {
 .button:hover,
 .track-button:hover {
   transform: translateY(-2px);
+}
+
+.toolbar-input,
+.toolbar-select {
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.toolbar-input:focus,
+.toolbar-select:focus {
+  outline: none;
+  border-color: rgba(255, 211, 106, 0.46);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 4px rgba(255, 211, 106, 0.08);
 }
 
 .eyebrow,
@@ -203,6 +263,7 @@ h3 {
   box-shadow:
     0 18px 60px rgba(0, 0, 0, 0.34),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  animation: view-enter 360ms ease both;
 }
 
 .site-brand {
@@ -228,6 +289,12 @@ h3 {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.06),
     0 10px 24px rgba(255, 107, 44, 0.22);
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.site-brand:hover .site-brand-mark {
+  transform: rotate(-2deg) scale(1.04);
+  filter: brightness(1.08);
 }
 
 .site-brand-logo {
@@ -335,6 +402,7 @@ h3 {
 
 .dashboard-view.is-active {
   display: block;
+  animation: view-enter 260ms ease both;
 }
 
 .section {
@@ -342,6 +410,7 @@ h3 {
   border: 1px solid var(--line);
   border-radius: 32px;
   background: rgba(7, 17, 31, 0.62);
+  animation: soft-pop 320ms ease both;
 }
 
 .section-heading {
@@ -350,8 +419,60 @@ h3 {
   max-width: 76ch;
 }
 
+.tracks-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: none;
+}
+
+.races-heading {
+  max-width: none;
+}
+
 .section-heading h2 {
   font-size: clamp(2rem, 3.8vw, 3.3rem);
+}
+
+.track-search-field {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 360px);
+}
+
+.track-search-field span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.race-filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) repeat(2, minmax(160px, 0.45fr)) auto;
+  gap: 14px;
+  margin-top: 12px;
+  align-items: end;
+}
+
+.race-filter-field {
+  display: grid;
+  gap: 8px;
+}
+
+.race-filter-field span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.race-filter-reset {
+  min-height: 48px;
+  white-space: nowrap;
 }
 
 .pilot-toolbar {
@@ -408,11 +529,12 @@ h3 {
   font: inherit;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .view-mode-button:hover {
   transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
 .view-mode-button.is-active {
@@ -451,6 +573,12 @@ h3 {
   border-radius: var(--radius-xl);
   background: linear-gradient(180deg, rgba(14, 27, 46, 0.9), rgba(9, 19, 34, 0.95));
   box-shadow: var(--shadow);
+  animation: soft-pop 280ms ease both;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .pilot-list-item {
@@ -462,6 +590,36 @@ h3 {
   text-align: left;
   cursor: pointer;
   color: var(--text);
+}
+
+.pilot-list-item:nth-child(1),
+.race-card:nth-child(1),
+.track-button:nth-child(1) {
+  animation-delay: 20ms;
+}
+
+.pilot-list-item:nth-child(2),
+.race-card:nth-child(2),
+.track-button:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.pilot-list-item:nth-child(3),
+.race-card:nth-child(3),
+.track-button:nth-child(3) {
+  animation-delay: 60ms;
+}
+
+.pilot-list-item:nth-child(4),
+.race-card:nth-child(4),
+.track-button:nth-child(4) {
+  animation-delay: 80ms;
+}
+
+.pilot-list-item:nth-child(n + 5),
+.race-card:nth-child(n + 5),
+.track-button:nth-child(n + 5) {
+  animation-delay: 100ms;
 }
 
 .pilot-list-compact .pilot-list-item {
@@ -480,6 +638,16 @@ h3 {
 .pilot-list-item:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 211, 106, 0.35);
+}
+
+.pilot-card:hover,
+.records-card:hover,
+.summary-card:hover,
+.track-selector-panel:hover {
+  border-color: rgba(255, 211, 106, 0.18);
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 rgba(255, 211, 106, 0.08);
 }
 
 .pilot-list-main {
@@ -508,6 +676,7 @@ h3 {
   border: 1px dashed rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-xl);
   background: rgba(255, 255, 255, 0.03);
+  animation: soft-pop 240ms ease both;
 }
 
 .empty-state h3 {
@@ -558,7 +727,7 @@ h3 {
 
 .pilot-highlights {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-top: 22px;
 }
@@ -582,6 +751,19 @@ h3 {
   display: block;
   margin-top: 8px;
   font-size: 1.1rem;
+}
+
+.lap-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.lap-empty-toggle {
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: 0.9rem;
 }
 
 .pilot-columns {
@@ -634,13 +816,80 @@ h3 {
   align-items: start;
 }
 
+.profile-card {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .profile-laps-card {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin-top: 0;
+}
+
+.profile-laps-card .records-table-wrapper {
+  overflow-x: hidden;
+}
+
+.profile-laps-card .records-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.profile-laps-card .records-table th:first-child,
+.profile-laps-card .records-table td:first-child {
+  width: 58%;
+}
+
+.profile-laps-card .records-table th:last-child,
+.profile-laps-card .records-table td:last-child {
+  width: 42%;
+}
+
+.profile-laps-card .track-jump-button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.profile-results-card {
+  grid-column: 1;
+  grid-row: 2;
   margin-top: 0;
 }
 
 .races-shell {
   display: grid;
   margin-top: 24px;
+}
+
+.race-scroll-top {
+  position: sticky;
+  left: calc(100% - 58px);
+  bottom: 22px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-top: 18px;
+  border: 1px solid rgba(255, 211, 106, 0.24);
+  border-radius: 999px;
+  background: rgba(12, 24, 42, 0.86);
+  color: var(--gold);
+  box-shadow: var(--shadow);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 900;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.race-scroll-top:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 211, 106, 0.52);
+  background: rgba(24, 40, 65, 0.94);
 }
 
 .races-list {
@@ -713,6 +962,13 @@ h3 {
   font-size: 1.5rem;
   line-height: 1;
   flex: 0 0 auto;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.race-card.is-open .race-chevron {
+  transform: rotate(180deg);
+  border-color: rgba(255, 211, 106, 0.28);
+  background: rgba(255, 211, 106, 0.1);
 }
 
 .race-results-panel {
@@ -722,6 +978,43 @@ h3 {
 
 .race-results-panel.is-open {
   display: block;
+  animation: view-enter 220ms ease both;
+}
+
+.race-session-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.race-session-button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.race-session-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(255, 211, 106, 0.35);
+}
+
+.race-session-button.is-active {
+  color: #111;
+  background: linear-gradient(135deg, #d8a8ff, #ffe08c);
+  border-color: transparent;
+}
+
+.race-session-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
 }
 
 .race-results-table {
@@ -737,6 +1030,83 @@ h3 {
   color: #d8a8ff;
   font-weight: 800;
   text-shadow: 0 0 18px rgba(186, 104, 255, 0.22);
+}
+
+.session-source-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(216, 168, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(216, 168, 255, 0.1);
+  color: #e8c8ff;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: help;
+  transition: transform 160ms ease, filter 160ms ease, border-color 160ms ease;
+}
+
+.session-source-chip:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+
+.session-source-chip-r {
+  border-color: rgba(255, 116, 99, 0.38);
+  background: rgba(255, 116, 99, 0.13);
+  color: #ffb3a8;
+}
+
+.session-source-chip-q {
+  border-color: rgba(255, 211, 106, 0.42);
+  background: rgba(255, 211, 106, 0.14);
+  color: #ffe08c;
+}
+
+.session-source-chip-fp {
+  border-color: rgba(105, 220, 255, 0.36);
+  background: rgba(105, 220, 255, 0.12);
+  color: #aeeeff;
+}
+
+.session-source-chip-unknown {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--muted);
+}
+
+.session-source-chip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 10;
+  width: max-content;
+  max-width: 240px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(8, 18, 32, 0.96);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.session-source-chip:hover::after,
+.session-source-chip:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .tracks-layout {
@@ -782,6 +1152,14 @@ h3 {
   background: rgba(152, 171, 198, 0.5);
 }
 
+.track-search-empty {
+  padding: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .track-button {
   display: grid;
   gap: 6px;
@@ -793,11 +1171,17 @@ h3 {
   color: var(--text);
   text-align: left;
   cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .track-button.is-active {
   border-color: rgba(255, 211, 106, 0.35);
   background: linear-gradient(135deg, rgba(255, 211, 106, 0.15), rgba(255, 107, 44, 0.08));
+  animation: soft-pop 220ms ease both;
 }
 
 .track-button-name {
@@ -817,6 +1201,11 @@ h3 {
   object-fit: cover;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
   flex: 0 0 auto;
+  transition: transform 180ms ease;
+}
+
+.track-button:hover .track-button-flag {
+  transform: scale(1.08);
 }
 
 .track-results-panel {
@@ -939,6 +1328,31 @@ h3 {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.records-table tbody tr {
+  animation: table-row-in 200ms ease both;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.records-table tbody tr:nth-child(1) {
+  animation-delay: 20ms;
+}
+
+.records-table tbody tr:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.records-table tbody tr:nth-child(3) {
+  animation-delay: 60ms;
+}
+
+.records-table tbody tr:nth-child(4) {
+  animation-delay: 80ms;
+}
+
+.records-table tbody tr:nth-child(n + 5) {
+  animation-delay: 100ms;
+}
+
 .track-jump-button {
   padding: 0;
   border: 0;
@@ -949,7 +1363,19 @@ h3 {
   cursor: pointer;
 }
 
-.track-jump-button:hover {
+.inline-nav-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.track-jump-button:hover,
+.inline-nav-button:hover {
   color: var(--gold);
   text-decoration: underline;
 }
@@ -963,6 +1389,13 @@ h3 {
   .pilot-list,
   .profile-layout {
     grid-template-columns: 1fr;
+  }
+
+  .profile-card,
+  .profile-laps-card,
+  .profile-results-card {
+    grid-column: auto;
+    grid-row: auto;
   }
 }
 
@@ -996,8 +1429,13 @@ h3 {
   .tracks-layout,
   .track-map-layout,
   .track-summary,
+  .race-filters,
   .pilot-columns {
     grid-template-columns: 1fr;
+  }
+
+  .pilot-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .track-selector-panel {
@@ -1048,5 +1486,20 @@ h3 {
 
   .pilot-highlights {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
   }
 }
