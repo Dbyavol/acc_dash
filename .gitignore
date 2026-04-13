@@ -1,4 +1,8 @@
-.venv
-*.py
-*.json
+.venv/
 __pycache__/
+*.pyc
+scripts/acc_server_api_config.json
+data/sessions/
+data/acc_results_export_*/
+*.json
+*.py
