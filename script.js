@@ -620,11 +620,49 @@ function buildTrackRecords() {
   });
 }
 
+function findEntryCarForSource(pilotId, source) {
+  if (source?.car_model_name) {
+    return source.car_model_name;
+  }
+
+  if (source?.car_model !== undefined && source.car_model !== null) {
+    return `Car #${source.car_model}`;
+  }
+
+  if (!pilotId || !source?.session_file) {
+    return null;
+  }
+
+  for (const race of racesFeed.races) {
+    const sessions = race.sessions || {};
+    const candidates = [
+      sessions.race,
+      sessions.qualifying,
+      ...(Array.isArray(sessions.practices) ? sessions.practices : [])
+    ].filter(Boolean);
+
+    const session = candidates.find((candidate) => candidate.session_file === source.session_file);
+
+    if (!session || !Array.isArray(session.entries)) {
+      continue;
+    }
+
+    const entry = session.entries.find((candidate) => candidate.pilot_id === pilotId);
+
+    if (entry) {
+      return entry.car_model_name || `Car #${entry.car_model ?? "—"}`;
+    }
+  }
+
+  return null;
+}
+
 function buildTrackLeaderboard(track) {
   return sortedPilots
     .map((pilot) => {
       const time = pilot.lapTimes[track];
       const timeMs = timeToMs(time);
+      const source = pilot.lapTimeSources?.[track] || null;
 
       return {
         id: pilot.id,
@@ -633,7 +671,8 @@ function buildTrackLeaderboard(track) {
         skill: pilot.skill,
         time,
         timeMs,
-        source: pilot.lapTimeSources?.[track] || null
+        source,
+        car: findEntryCarForSource(pilot.id, source)
       };
     })
     .filter((entry) => entry.timeMs !== null)
@@ -1481,6 +1520,7 @@ function renderTrackLeaderboard() {
             </button>
           </td>
           <td>${escapeHtml(entry.number)}</td>
+          <td>${escapeHtml(entry.car || "—")}</td>
           <td>
             <button
               class="inline-nav-button track-time-source"
@@ -1592,6 +1632,7 @@ function renderRaces() {
                     </button>
                   </td>
                   <td>${escapeHtml(entry.race_number || "—")}</td>
+                  <td>${escapeHtml(entry.car_model_name || `Car #${entry.car_model ?? "—"}`)}</td>
                   <td>${escapeHtml(String(entry.lap_count ?? "—"))}</td>
                   <td class="${entry.best_lap_ms !== null && entry.best_lap_ms === bestLapMs ? "race-best-lap" : ""}">${escapeHtml(entry.best_lap || "—")}</td>
                   <td>${escapeHtml(formatRaceTotalTime(entry.total_time))}</td>
@@ -1602,7 +1643,7 @@ function renderRaces() {
             .join("")
         : `
           <tr>
-            <td colspan="7" class="race-results-empty">Результаты этой гонки пока не загружены.</td>
+            <td colspan="8" class="race-results-empty">Результаты этой гонки пока не загружены.</td>
           </tr>
         `;
 
@@ -1662,6 +1703,7 @@ function renderRaces() {
                     <th>Позиция</th>
                     <th>Пилот</th>
                     <th>Номер</th>
+                    <th>Машина</th>
                     <th>Круги</th>
                     <th>Лучший круг</th>
                     <th>Общее время</th>

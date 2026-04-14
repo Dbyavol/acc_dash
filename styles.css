@@ -1380,7 +1380,7 @@ h3 {
 }
 
 .race-results-table {
-  min-width: 680px;
+  min-width: 860px;
 }
 
 .race-results-empty {
@@ -1760,7 +1760,7 @@ h3 {
 .records-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 720px;
+  min-width: 820px;
 }
 
 .records-table th,
