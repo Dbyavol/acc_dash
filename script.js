@@ -75,6 +75,7 @@ const state = {
   raceSearchQuery: "",
   raceDateFrom: "",
   raceDateTo: "",
+  profileResultsPage: 1,
   skillFilter: "all",
   sortBy: "number-asc",
   showEmptyLapTimes: false
@@ -85,6 +86,25 @@ let racesFeed = {
   count: Array.isArray(siteData.races) ? siteData.races.length : 0,
   races: Array.isArray(siteData.races) ? siteData.races : []
 };
+
+function getNavigationSnapshot() {
+  return {
+    activeView: state.activeView,
+    selectedTrack: state.selectedTrack,
+    selectedPilotNumber: state.selectedPilotNumber,
+    selectedRaceId: state.selectedRaceId,
+    selectedRaceSessions: { ...state.selectedRaceSessions },
+    profileResultsPage: state.profileResultsPage
+  };
+}
+
+function pushNavigationState() {
+  if (!window.history?.pushState) {
+    return;
+  }
+
+  history.pushState(getNavigationSnapshot(), "", window.location.href);
+}
 
 function loadState() {
   try {
@@ -141,6 +161,10 @@ function loadState() {
 
     if (typeof saved.raceDateTo === "string") {
       state.raceDateTo = saved.raceDateTo;
+    }
+
+    if (typeof saved.profileResultsPage === "number") {
+      state.profileResultsPage = saved.profileResultsPage;
     }
 
     if (typeof saved.skillFilter === "string") {
@@ -237,9 +261,14 @@ function getSessionChipClass(value) {
 function getRaceSession(race) {
   const sessions = race.sessions || {};
   const requestedType = state.selectedRaceSessions[race.id] || "race";
+  const practiceSession = Array.isArray(sessions.practices) ? sessions.practices[0] : sessions.practice;
 
   if (requestedType === "qualifying" && sessions.qualifying) {
     return { type: "qualifying", label: "Квалификация", session: sessions.qualifying };
+  }
+
+  if (requestedType === "practice" && practiceSession) {
+    return { type: "practice", label: "Практика", session: practiceSession };
   }
 
   if (sessions.race) {
@@ -248,6 +277,10 @@ function getRaceSession(race) {
 
   if (sessions.qualifying) {
     return { type: "qualifying", label: "Квалификация", session: sessions.qualifying };
+  }
+
+  if (practiceSession) {
+    return { type: "practice", label: "Практика", session: practiceSession };
   }
 
   return { type: "race", label: "Гонка", session: race };
@@ -266,8 +299,9 @@ function openPilotProfile(pilotId) {
   }
 
   state.selectedPilotNumber = pilotId;
+  state.profileResultsPage = 1;
   renderPilotProfile();
-  setActiveView("profile");
+  navigateToView("profile");
   saveState();
 }
 
@@ -321,9 +355,39 @@ function openRaceResults(raceId, sessionType = "race") {
   state.selectedRaceId = raceId;
   state.selectedRaceSessions[raceId] = sessionType;
   renderRaces();
-  setActiveView("races");
+  navigateToView("races");
   scrollToRaceCard(raceId);
   saveState();
+}
+
+function openSessionSource(source) {
+  if (!source?.session_file) {
+    return;
+  }
+
+  const sourceType = formatSessionCode(source.session_type);
+  const sessionType =
+    sourceType === "Q"
+      ? "qualifying"
+      : sourceType === "FP"
+        ? "practice"
+        : "race";
+  const race = racesFeed.races.find((candidate) => {
+    const sessions = candidate.sessions || {};
+    const practiceSessions = Array.isArray(sessions.practices) ? sessions.practices : [];
+
+    return (
+      sessions.race?.session_file === source.session_file ||
+      sessions.qualifying?.session_file === source.session_file ||
+      practiceSessions.some((practice) => practice.session_file === source.session_file)
+    );
+  });
+
+  if (!race) {
+    return;
+  }
+
+  openRaceResults(getRaceId(race), sessionType);
 }
 
 function formatRaceGapToLeader(entry, leaderEntry) {
@@ -491,12 +555,6 @@ function getFilteredPilots() {
 
   return [...sortedPilots]
     .filter((pilot) => {
-      const matchesSkill = state.skillFilter === "all" || pilot.skill === state.skillFilter;
-
-      if (!matchesSkill) {
-        return false;
-      }
-
       if (!query) {
         return true;
       }
@@ -513,6 +571,8 @@ function getFilteredPilots() {
           return getPilotNumberValue(right) - getPilotNumberValue(left);
         case "name-asc":
           return left.name.localeCompare(right.name, "ru");
+        case "races-desc":
+          return (right.stats?.races || 0) - (left.stats?.races || 0);
         case "age-asc":
           return left.age - right.age;
         case "age-desc":
@@ -623,6 +683,81 @@ function getFilteredRaces() {
   });
 }
 
+function getPilotPodiumCounts(pilot) {
+  return (pilot.recentResults || []).reduce(
+    (counts, result) => {
+      if (result.position === 1) {
+        counts.gold += 1;
+      }
+      if (result.position === 2) {
+        counts.silver += 1;
+      }
+      if (result.position === 3) {
+        counts.bronze += 1;
+      }
+      return counts;
+    },
+    { gold: 0, silver: 0, bronze: 0 }
+  );
+}
+
+function renderPodiumCups(pilot) {
+  const counts = getPilotPodiumCounts(pilot);
+  const cups = [
+    ["gold", "P1", counts.gold],
+    ["silver", "P2", counts.silver],
+    ["bronze", "P3", counts.bronze]
+  ].filter(([, , count]) => count > 0);
+
+  if (!cups.length) {
+    return "";
+  }
+
+  return `
+    <div class="podium-cups" aria-label="Подиумы пилота">
+      ${cups
+        .map(
+          ([type, label, count]) => `
+            <span class="podium-cup">
+              <span class="podium-cup-badge podium-cup-${type}">${label}</span>
+              <span class="podium-cup-count">x ${count}</span>
+            </span>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function getPodiumRank(position) {
+  const rank = Number(position);
+
+  return rank >= 1 && rank <= 3 ? rank : null;
+}
+
+function getPilotTrackMedals(pilot) {
+  return tracks
+    .map((track) => {
+      const rank = buildTrackLeaderboard(track).findIndex((entry) => entry.id === pilot.id) + 1;
+      if (rank < 1 || rank > 3) {
+        return null;
+      }
+      return { track, rank };
+    })
+    .filter(Boolean);
+}
+
+function getPilotRaceMedals(pilot) {
+  return (pilot.recentResults || [])
+    .filter((result) => getPodiumRank(result.position))
+    .map((result) => ({
+      raceId: result.race_id,
+      track: result.track || "Гонка",
+      date: result.date,
+      rank: result.position
+    }));
+}
+
 function renderPilotList() {
   const pilotList = document.querySelector("#pilot-list");
   const filteredPilots = getFilteredPilots();
@@ -655,12 +790,14 @@ function renderPilotList() {
             </div>
           `
           : "";
+      const podiumCups = renderPodiumCups(pilot);
 
       return `
         <button class="pilot-list-item" type="button" data-pilot-id="${escapeHtml(pilot.id)}">
           <div class="pilot-list-main">
             <span class="pilot-list-name">${escapeHtml(pilot.name)}</span>
             ${compactMeta}
+            ${podiumCups}
             ${detailedBlock}
           </div>
           <span class="pilot-list-number">${escapeHtml(pilot.number)}</span>
@@ -673,7 +810,7 @@ function renderPilotList() {
     button.addEventListener("click", () => {
       state.selectedPilotNumber = button.dataset.pilotId;
       renderPilotProfile();
-      setActiveView("profile");
+      navigateToView("profile");
       saveState();
     });
   });
@@ -699,6 +836,12 @@ function renderPilotProfile() {
 
   const completedTracks = tracks.filter((track) => timeToMs(pilot.lapTimes[track]) !== null);
   const lapTracks = state.showEmptyLapTimes ? tracks : completedTracks;
+  const trackRanks = Object.fromEntries(
+    tracks.map((track) => [
+      track,
+      buildTrackLeaderboard(track).findIndex((entry) => entry.id === pilot.id) + 1
+    ])
+  );
   const lapRows = lapTracks.length
     ? lapTracks
     .map(
@@ -722,6 +865,7 @@ function renderPilotProfile() {
               ${escapeHtml(pilot.lapTimes[track])}
             </button>
           </td>
+          <td>${trackRanks[track] > 0 ? `P${trackRanks[track]}` : "—"}</td>
         </tr>
       `
     )
@@ -731,31 +875,104 @@ function renderPilotProfile() {
         <td colspan="2" class="race-results-empty">У пилота пока нет зафиксированных времен.</td>
       </tr>
     `;
-  const recentResultRows = Array.isArray(pilot.recentResults) && pilot.recentResults.length
-    ? pilot.recentResults
+  const trackMedals = getPilotTrackMedals(pilot);
+  const raceMedals = getPilotRaceMedals(pilot);
+  const trackMedalsBlock = trackMedals.length
+    ? `
+      <div class="track-medals">
+        ${trackMedals
+          .map(
+            (medal) => `
+              <button
+                class="track-medal track-medal-${medal.rank}"
+                type="button"
+                data-track-jump="${escapeHtml(medal.track)}"
+              >
+                <span class="track-medal-rank">P${medal.rank}</span>
+                <span>${escapeHtml(medal.track)}</span>
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+    `
+    : "";
+  const raceMedalsBlock = raceMedals.length
+    ? `
+      <div class="track-medals race-medals">
+        ${raceMedals
+          .map(
+            (medal) => `
+              <button
+                class="track-medal race-medal track-medal-${medal.rank}"
+                type="button"
+                data-race-jump="${escapeHtml(medal.raceId)}"
+              >
+                <span class="track-medal-rank">P${medal.rank}</span>
+                <span>${escapeHtml(medal.track)}</span>
+                <span class="race-medal-date">${escapeHtml(formatRaceDate(medal.date))}</span>
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+    `
+    : "";
+  const recentResults = Array.isArray(pilot.recentResults) ? pilot.recentResults : [];
+  const resultsPerPage = 5;
+  const totalResultPages = Math.max(1, Math.ceil(recentResults.length / resultsPerPage));
+  state.profileResultsPage = Math.min(Math.max(1, state.profileResultsPage), totalResultPages);
+  const visibleRecentResults = recentResults.slice(
+    (state.profileResultsPage - 1) * resultsPerPage,
+    state.profileResultsPage * resultsPerPage
+  );
+  const recentResultRows = visibleRecentResults.length
+    ? visibleRecentResults
         .map(
-          (result) => `
-            <tr>
-              <td>${escapeHtml(formatRaceDate(result.date))}</td>
-              <td>
-                <button
-                  class="inline-nav-button"
-                  type="button"
-                  data-race-jump="${escapeHtml(result.race_id)}"
-                >
-                  ${escapeHtml(result.track || "—")}
-                </button>
-              </td>
-              <td>${escapeHtml(result.position ? `P${result.position}` : "—")}</td>
-              <td>${escapeHtml(String(result.lap_count ?? "—"))}</td>
-              <td>${escapeHtml(result.best_lap || "—")}</td>
-            </tr>
-          `
+          (result) => {
+            const podiumRank = getPodiumRank(result.position);
+            const positionClass = podiumRank ? ` result-position-podium result-position-podium-${podiumRank}` : "";
+
+            return `
+              <tr>
+                <td>${escapeHtml(formatRaceDate(result.date))}</td>
+                <td>
+                  <button
+                    class="inline-nav-button"
+                    type="button"
+                    data-race-jump="${escapeHtml(result.race_id)}"
+                  >
+                    ${escapeHtml(result.track || "—")}
+                  </button>
+                </td>
+                <td>
+                  <span class="result-position-badge${positionClass}">
+                    ${escapeHtml(result.position ? `P${result.position}` : "—")}
+                  </span>
+                </td>
+                <td>${escapeHtml(String(result.lap_count ?? "—"))}</td>
+                <td>${escapeHtml(result.best_lap || "—")}</td>
+              </tr>
+            `;
+          }
         )
         .join("")
     : `
       <tr>
         <td colspan="5" class="race-results-empty">Недавних результатов пока нет.</td>
+      </tr>
+    `;
+  const carStatsRows = Array.isArray(pilot.carStats) && pilot.carStats.length
+    ? pilot.carStats.slice(0, 5).map((car) => `
+        <tr>
+          <td>${escapeHtml(car.car_model_name || `Car #${car.car_model ?? "—"}`)}</td>
+          <td>${escapeHtml(String(car.sessions ?? 0))}</td>
+          <td>${escapeHtml(String(car.laps ?? 0))}</td>
+        </tr>
+      `).join("")
+    : `
+      <tr>
+        <td colspan="3" class="race-results-empty">Статистики по машинам пока нет.</td>
       </tr>
     `;
 
@@ -810,6 +1027,28 @@ function renderPilotProfile() {
 
         ${achievementsBlock}
 
+        ${
+          trackMedalsBlock
+            ? `
+              <div class="info-panel compact track-medals-panel">
+                <h4>Медали трасс</h4>
+                ${trackMedalsBlock}
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          raceMedalsBlock
+            ? `
+              <div class="info-panel compact track-medals-panel">
+                <h4>Медали гонок</h4>
+                ${raceMedalsBlock}
+              </div>
+            `
+            : ""
+        }
+
         <div class="info-panel compact">
           <h4>Титулы</h4>
           <p>${escapeHtml(pilot.titles)}</p>
@@ -842,6 +1081,7 @@ function renderPilotProfile() {
             <tr>
               <th>Трасса</th>
               <th>Лучшее время</th>
+              <th>Позиция</th>
             </tr>
           </thead>
           <tbody>${lapRows}</tbody>
@@ -872,6 +1112,37 @@ function renderPilotProfile() {
           <tbody>${recentResultRows}</tbody>
         </table>
       </div>
+      <div class="profile-results-pager">
+        <button class="button profile-results-page-button" type="button" data-results-page="prev" ${state.profileResultsPage <= 1 ? "disabled" : ""}>
+          Назад
+        </button>
+        <span>${state.profileResultsPage}/${totalResultPages}</span>
+        <button class="button profile-results-page-button" type="button" data-results-page="next" ${state.profileResultsPage >= totalResultPages ? "disabled" : ""}>
+          Вперед
+        </button>
+      </div>
+    </div>
+
+    <div class="records-card profile-results-card profile-cars-card">
+      <div class="records-card-header">
+        <div>
+          <p class="pilot-tag">Cars</p>
+          <h3>Машины пилота</h3>
+        </div>
+      </div>
+
+      <div class="records-table-wrapper">
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>Машина</th>
+              <th>Сессии</th>
+              <th>Круги</th>
+            </tr>
+          </thead>
+          <tbody>${carStatsRows}</tbody>
+        </table>
+      </div>
     </div>
   `;
 
@@ -880,7 +1151,7 @@ function renderPilotProfile() {
       state.selectedTrack = button.dataset.trackJump;
       renderTrackSelector();
       renderTrackLeaderboard();
-      setActiveView("tracks");
+      navigateToView("tracks");
       saveState();
     });
   });
@@ -894,6 +1165,14 @@ function renderPilotProfile() {
   profileLayout.querySelectorAll("[data-race-jump]").forEach((button) => {
     button.addEventListener("click", () => {
       openRaceResults(button.dataset.raceJump, "race");
+    });
+  });
+
+  profileLayout.querySelectorAll("[data-results-page]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.profileResultsPage += button.dataset.resultsPage === "next" ? 1 : -1;
+      renderPilotProfile();
+      saveState();
     });
   });
 }
@@ -947,6 +1226,7 @@ function renderTrackSelector() {
       state.selectedTrack = button.dataset.track;
       renderTrackSelector();
       renderTrackLeaderboard();
+      pushNavigationState();
       saveState();
     });
   });
@@ -1029,12 +1309,25 @@ function renderTrackLeaderboard() {
             </button>
           </td>
           <td>${escapeHtml(entry.number)}</td>
-          <td>${escapeHtml(entry.time)}</td>
+          <td>
+            <button
+              class="inline-nav-button track-time-source"
+              type="button"
+              data-session-source="${escapeHtml(JSON.stringify(entry.source || {}))}"
+            >
+              ${escapeHtml(entry.time)}
+            </button>
+          </td>
           <td>${escapeHtml(gap)}</td>
           <td>
-            <span class="session-source-chip ${escapeHtml(getSessionChipClass(sessionType))}" data-tooltip="${escapeHtml(formatSessionHint(sessionType))}">
+            <button
+              class="session-source-chip ${escapeHtml(getSessionChipClass(sessionType))}"
+              type="button"
+              data-session-source="${escapeHtml(JSON.stringify(entry.source || {}))}"
+              data-tooltip="${escapeHtml(formatSessionHint(sessionType))}"
+            >
               ${escapeHtml(formatSessionCode(sessionType))}
-            </span>
+            </button>
           </td>
         </tr>
       `;
@@ -1049,6 +1342,16 @@ function renderTrackLeaderboard() {
   body.querySelectorAll("[data-track-pilot-jump]").forEach((button) => {
     button.addEventListener("click", () => {
       openPilotProfile(button.dataset.trackPilotJump);
+    });
+  });
+
+  body.querySelectorAll("[data-session-source]").forEach((button) => {
+    button.addEventListener("click", () => {
+      try {
+        openSessionSource(JSON.parse(button.dataset.sessionSource || "{}"));
+      } catch (error) {
+        console.warn("Не удалось открыть сессию лучшего времени.", error);
+      }
     });
   });
 }
@@ -1087,6 +1390,7 @@ function renderRaces() {
       const raceId = getRaceId(race);
       const isOpen = state.selectedRaceId === raceId;
       const activeSession = getRaceSession(race);
+      const hasPractice = Array.isArray(race.sessions?.practices) && race.sessions.practices.length > 0;
       const entries = getRaceSessionEntries(race);
       const leaderEntry = entries[0] || null;
       const bestLapMs = entries.reduce((best, entry) => {
@@ -1168,6 +1472,15 @@ function renderRaces() {
                 ${race.sessions?.qualifying ? "" : "disabled"}
               >
                 Квалификация
+              </button>
+              <button
+                class="race-session-button ${activeSession.type === "practice" ? "is-active" : ""}"
+                type="button"
+                data-race-session-id="${escapeHtml(raceId)}"
+                data-race-session-type="practice"
+                ${hasPractice ? "" : "disabled"}
+              >
+                Практика
               </button>
             </div>
             <div class="records-table-wrapper">
@@ -1263,10 +1576,46 @@ function setActiveView(viewName) {
   saveState();
 }
 
+function navigateToView(viewName) {
+  setActiveView(viewName);
+  pushNavigationState();
+}
+
+function restoreNavigationSnapshot(snapshot) {
+  if (!snapshot) {
+    return;
+  }
+
+  if (typeof snapshot.activeView === "string") {
+    state.activeView = snapshot.activeView;
+  }
+  if (typeof snapshot.selectedTrack === "string" && tracks.includes(snapshot.selectedTrack)) {
+    state.selectedTrack = snapshot.selectedTrack;
+  }
+  if (typeof snapshot.selectedPilotNumber === "string") {
+    state.selectedPilotNumber = snapshot.selectedPilotNumber;
+  }
+  if (typeof snapshot.selectedRaceId === "string" || snapshot.selectedRaceId === null) {
+    state.selectedRaceId = snapshot.selectedRaceId;
+  }
+  if (snapshot.selectedRaceSessions && typeof snapshot.selectedRaceSessions === "object") {
+    state.selectedRaceSessions = snapshot.selectedRaceSessions;
+  }
+  if (typeof snapshot.profileResultsPage === "number") {
+    state.profileResultsPage = snapshot.profileResultsPage;
+  }
+
+  renderPilotProfile();
+  renderTrackSelector();
+  renderTrackLeaderboard();
+  renderRaces();
+  setActiveView(state.activeView);
+}
+
 function bindViewControls() {
   document.querySelectorAll("[data-view-target]").forEach((control) => {
     control.addEventListener("click", () => {
-      setActiveView(control.dataset.viewTarget);
+      navigateToView(control.dataset.viewTarget);
     });
   });
 }
@@ -1275,17 +1624,16 @@ function bindProfileControls() {
   const backButton = document.querySelector("#back-to-list");
 
   backButton.addEventListener("click", () => {
-    setActiveView("cards");
+    navigateToView("cards");
   });
 }
 
 function bindPilotToolbar() {
   const searchInput = document.querySelector("#pilot-search");
-  const skillFilter = document.querySelector("#pilot-skill-filter");
   const sortSelect = document.querySelector("#pilot-sort");
+  const resetButton = document.querySelector("#pilot-filter-reset");
 
   searchInput.value = state.searchQuery;
-  skillFilter.value = state.skillFilter;
   sortSelect.value = state.sortBy;
 
   document.querySelectorAll("[data-list-view]").forEach((control) => {
@@ -1298,14 +1646,21 @@ function bindPilotToolbar() {
     saveState();
   });
 
-  skillFilter.addEventListener("change", (event) => {
-    state.skillFilter = event.target.value;
+  sortSelect.addEventListener("change", (event) => {
+    state.sortBy = event.target.value;
     renderPilotList();
     saveState();
   });
 
-  sortSelect.addEventListener("change", (event) => {
-    state.sortBy = event.target.value;
+  resetButton?.addEventListener("click", () => {
+    state.searchQuery = "";
+    state.sortBy = "number-asc";
+    state.listView = "compact";
+    searchInput.value = "";
+    sortSelect.value = state.sortBy;
+    document.querySelectorAll("[data-list-view]").forEach((control) => {
+      control.classList.toggle("is-active", control.dataset.listView === state.listView);
+    });
     renderPilotList();
     saveState();
   });
@@ -1407,4 +1762,10 @@ bindTrackSearch();
 bindRaceFilters();
 bindRaceScrollTop();
 setActiveView(state.activeView);
+if (window.history?.replaceState) {
+  history.replaceState(getNavigationSnapshot(), "", window.location.href);
+}
+window.addEventListener("popstate", (event) => {
+  restoreNavigationSnapshot(event.state);
+});
 loadRacesFeed();

@@ -58,6 +58,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   font-family: "Manrope", sans-serif;
   color: var(--text);
   background:
@@ -402,7 +403,6 @@ h3 {
 
 .dashboard-view.is-active {
   display: block;
-  animation: view-enter 260ms ease both;
 }
 
 .section {
@@ -410,7 +410,6 @@ h3 {
   border: 1px solid var(--line);
   border-radius: 32px;
   background: rgba(7, 17, 31, 0.62);
-  animation: soft-pop 320ms ease both;
 }
 
 .section-heading {
@@ -573,7 +572,6 @@ h3 {
   border-radius: var(--radius-xl);
   background: linear-gradient(180deg, rgba(14, 27, 46, 0.9), rgba(9, 19, 34, 0.95));
   box-shadow: var(--shadow);
-  animation: soft-pop 280ms ease both;
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -590,36 +588,6 @@ h3 {
   text-align: left;
   cursor: pointer;
   color: var(--text);
-}
-
-.pilot-list-item:nth-child(1),
-.race-card:nth-child(1),
-.track-button:nth-child(1) {
-  animation-delay: 20ms;
-}
-
-.pilot-list-item:nth-child(2),
-.race-card:nth-child(2),
-.track-button:nth-child(2) {
-  animation-delay: 40ms;
-}
-
-.pilot-list-item:nth-child(3),
-.race-card:nth-child(3),
-.track-button:nth-child(3) {
-  animation-delay: 60ms;
-}
-
-.pilot-list-item:nth-child(4),
-.race-card:nth-child(4),
-.track-button:nth-child(4) {
-  animation-delay: 80ms;
-}
-
-.pilot-list-item:nth-child(n + 5),
-.race-card:nth-child(n + 5),
-.track-button:nth-child(n + 5) {
-  animation-delay: 100ms;
 }
 
 .pilot-list-compact .pilot-list-item {
@@ -669,6 +637,152 @@ h3 {
   display: grid;
   gap: 6px;
   line-height: 1.55;
+}
+
+.podium-cups,
+.track-medals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.podium-cup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  min-height: 28px;
+  padding: 0;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.podium-cup-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  font-family: "Russo One", sans-serif;
+}
+
+.podium-cup-count {
+  font-size: 0.82rem;
+}
+
+.podium-cup-gold {
+  border: 1px solid rgba(255, 211, 106, 0.28);
+  background: linear-gradient(135deg, rgba(255, 211, 106, 0.18), rgba(255, 211, 106, 0.06));
+  color: #ffe08c;
+}
+
+.podium-cup-silver {
+  border: 1px solid rgba(205, 220, 235, 0.24);
+  background: linear-gradient(135deg, rgba(205, 220, 235, 0.15), rgba(205, 220, 235, 0.05));
+  color: #dfe9f5;
+}
+
+.podium-cup-bronze {
+  border: 1px solid rgba(210, 139, 77, 0.28);
+  background: linear-gradient(135deg, rgba(210, 139, 77, 0.16), rgba(210, 139, 77, 0.05));
+  color: #ffc08a;
+}
+
+.track-medals-panel {
+  grid-column: 1 / -1;
+}
+
+.track-medal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.track-medal:hover {
+  transform: translateY(-2px);
+}
+
+.track-medal-rank {
+  font-family: "Russo One", sans-serif;
+}
+
+.track-medal-1 {
+  border-color: rgba(255, 211, 106, 0.46);
+  background: linear-gradient(135deg, rgba(255, 211, 106, 0.18), rgba(255, 184, 107, 0.08));
+}
+
+.track-medal-2 {
+  border-color: rgba(205, 220, 235, 0.38);
+  background: linear-gradient(135deg, rgba(205, 220, 235, 0.14), rgba(152, 171, 198, 0.06));
+}
+
+.track-medal-3 {
+  border-color: rgba(210, 139, 77, 0.42);
+  background: linear-gradient(135deg, rgba(210, 139, 77, 0.14), rgba(255, 107, 44, 0.06));
+}
+
+.race-medals {
+  gap: 10px;
+}
+
+.race-medal {
+  border-radius: 16px;
+  padding: 8px 12px;
+}
+
+.race-medal-date {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.result-position-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: "Russo One", sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.result-position-podium {
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.result-position-podium-1 {
+  background: linear-gradient(135deg, rgba(255, 211, 106, 0.24), rgba(255, 184, 107, 0.08));
+  color: #ffe08c;
+}
+
+.result-position-podium-2 {
+  background: linear-gradient(135deg, rgba(205, 220, 235, 0.2), rgba(152, 171, 198, 0.06));
+  color: #e9f2ff;
+}
+
+.result-position-podium-3 {
+  background: linear-gradient(135deg, rgba(210, 139, 77, 0.22), rgba(255, 107, 44, 0.07));
+  color: #ffc08a;
 }
 
 .empty-state {
@@ -838,12 +952,17 @@ h3 {
 
 .profile-laps-card .records-table th:first-child,
 .profile-laps-card .records-table td:first-child {
-  width: 58%;
+  width: 48%;
+}
+
+.profile-laps-card .records-table th:nth-child(2),
+.profile-laps-card .records-table td:nth-child(2) {
+  width: 34%;
 }
 
 .profile-laps-card .records-table th:last-child,
 .profile-laps-card .records-table td:last-child {
-  width: 42%;
+  width: 18%;
 }
 
 .profile-laps-card .track-jump-button {
@@ -855,6 +974,29 @@ h3 {
   grid-column: 1;
   grid-row: 2;
   margin-top: 0;
+}
+
+.profile-cars-card {
+  grid-row: 3;
+}
+
+.profile-results-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.profile-results-page-button {
+  min-height: 40px;
+}
+
+.profile-results-page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .races-shell {
@@ -1329,28 +1471,7 @@ h3 {
 }
 
 .records-table tbody tr {
-  animation: table-row-in 200ms ease both;
   transition: background 160ms ease, color 160ms ease;
-}
-
-.records-table tbody tr:nth-child(1) {
-  animation-delay: 20ms;
-}
-
-.records-table tbody tr:nth-child(2) {
-  animation-delay: 40ms;
-}
-
-.records-table tbody tr:nth-child(3) {
-  animation-delay: 60ms;
-}
-
-.records-table tbody tr:nth-child(4) {
-  animation-delay: 80ms;
-}
-
-.records-table tbody tr:nth-child(n + 5) {
-  animation-delay: 100ms;
 }
 
 .track-jump-button {
@@ -1444,8 +1565,14 @@ h3 {
 }
 
 @media (max-width: 640px) {
+  body::before {
+    display: none;
+  }
+
   .page-shell {
-    width: calc(100% - 20px);
+    width: 100%;
+    max-width: 100%;
+    padding-inline: 10px;
     padding-top: 0;
   }
 
@@ -1486,6 +1613,32 @@ h3 {
 
   .pilot-highlights {
     grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding: 18px 14px;
+  }
+
+  .header-bar,
+  .race-card-badges,
+  .lap-card-actions,
+  .profile-results-pager {
+    width: 100%;
+  }
+
+  .race-date-badge,
+  .race-count-badge,
+  .records-badge {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .records-table {
+    min-width: 620px;
+  }
+
+  .profile-laps-card .records-table {
+    min-width: 0;
   }
 }
 
