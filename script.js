@@ -50,6 +50,10 @@ function formatGap(gapMs) {
 }
 
 const siteData = window.__ACC_SITE_DATA__ || {};
+const announcementsFeed = window.__ACC_ANNOUNCEMENTS__ || {
+  discordUrl: "https://discord.gg/accru",
+  announcements: []
+};
 const dataPilots =
   Array.isArray(siteData.pilots) && siteData.pilots.length
     ? siteData.pilots
@@ -649,6 +653,164 @@ function formatRaceDate(value) {
   }
 
   return parsed.toLocaleString("ru-RU");
+}
+
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatAnnouncementDate(value, weekday) {
+  if (!value) {
+    return "Дата не указана";
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+
+  if ([year, month, day].some(Number.isNaN)) {
+    return value;
+  }
+
+  const formatted = new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }).format(new Date(year, month - 1, day));
+
+  return weekday ? `${formatted}, ${weekday}` : formatted;
+}
+
+function getUpcomingAnnouncements() {
+  const today = getLocalDateKey();
+  const announcements = Array.isArray(announcementsFeed.announcements)
+    ? announcementsFeed.announcements
+    : [];
+
+  return announcements
+    .filter((announcement) => typeof announcement.date === "string" && announcement.date >= today)
+    .sort((left, right) => left.date.localeCompare(right.date));
+}
+
+function renderAnnouncements() {
+  const list = document.querySelector("#announcements-list");
+  const count = document.querySelector("#announcements-count");
+
+  if (!list) {
+    return;
+  }
+
+  const announcements = getUpcomingAnnouncements();
+
+  if (count) {
+    count.textContent = `${announcements.length} ${announcements.length === 1 ? "событие" : "событий"}`;
+  }
+
+  if (!announcements.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>Будущих анонсов пока нет</h3>
+        <p>Когда появится новая гонка, добавьте ее в папку data/announcements, и она появится здесь автоматически до даты события.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const discordUrl = announcementsFeed.discordUrl || "https://discord.gg/accru";
+  const liveryPackUrl = announcementsFeed.liveryPackUrl || "";
+
+  list.innerHTML = announcements
+    .map((announcement) => {
+      const sessions = Array.isArray(announcement.sessions) ? announcement.sessions : [];
+      const rules = Array.isArray(announcement.rules) ? announcement.rules : [];
+      const notes = Array.isArray(announcement.notes) ? announcement.notes : [];
+      const trackImage = announcement.track ? trackImageMap[announcement.track] : "";
+      const country = announcement.track ? trackCountryMap[announcement.track] : null;
+      const flagUrl = country ? `https://flagcdn.com/h24/${country.code}.png` : "";
+
+      return `
+        <article class="announcement-card">
+          <div class="announcement-main">
+            <div class="announcement-date">
+              <span>${escapeHtml(formatAnnouncementDate(announcement.date, announcement.weekday))}</span>
+            </div>
+            <h3>
+              ${
+                flagUrl
+                  ? `
+                    <span class="announcement-country-badge">
+                      <img src="${escapeHtml(flagUrl)}" alt="Флаг ${escapeHtml(country.name)}" loading="lazy" />
+                    </span>
+                  `
+                  : `<span class="announcement-flag">${escapeHtml(announcement.flag || "")}</span>`
+              }
+              ${escapeHtml(announcement.track || "Трасса уточняется")}
+            </h3>
+            ${
+              trackImage
+                ? `
+                  <div class="announcement-track-map">
+                    <button
+                      class="track-map-open-button"
+                      type="button"
+                      data-map-viewer-src="${escapeHtml(trackImage)}"
+                      data-map-viewer-title="${escapeHtml(announcement.track)}"
+                    >
+                      <img src="${escapeHtml(trackImage)}" alt="Схема трассы ${escapeHtml(announcement.track)}" loading="lazy" />
+                      <span>Открыть схему</span>
+                    </button>
+                  </div>
+                `
+                : ""
+            }
+          </div>
+
+          <div class="announcement-schedule">
+            ${sessions
+              .map(
+                (session) => `
+                  <div class="announcement-session">
+                    <span>${escapeHtml(session.label || "Сессия")}</span>
+                    <strong>${escapeHtml(session.time || "Время уточняется")}</strong>
+                  </div>
+                `
+              )
+              .join("")}
+          </div>
+
+          ${
+            rules.length || notes.length
+              ? `
+                <div class="announcement-details">
+                  ${rules.map((rule) => `<p class="announcement-rule">${escapeHtml(rule)}</p>`).join("")}
+                  ${notes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
+                </div>
+              `
+              : ""
+          }
+
+          <div class="announcement-actions">
+            ${
+              liveryPackUrl
+                ? `
+                  <a class="announcement-action announcement-livery-link" href="${escapeHtml(liveryPackUrl)}" target="_blank" rel="noreferrer" aria-label="Скачать пак ливрей">
+                    <span class="announcement-action-icon" aria-hidden="true">⬇</span>
+                    <span>Пак ливрей</span>
+                  </a>
+                `
+                : ""
+            }
+            <a class="announcement-action announcement-discord-link" href="${escapeHtml(discordUrl)}" target="_blank" rel="noreferrer" aria-label="Получить пароль в Discord">
+              <span class="announcement-action-icon" aria-hidden="true">#</span>
+              <span>Discord</span>
+            </a>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 function getRaceDateKey(race) {
@@ -1254,11 +1416,19 @@ function renderTrackLeaderboard() {
     <div class="summary-card track-overview-card">
       <div class="track-map-layout">
         <div class="track-map-frame">
-          <img
-            class="track-map-image"
-            src="${escapeHtml(imagePath)}"
-            alt="Схема трассы ${escapeHtml(state.selectedTrack)}"
-          />
+          <button
+            class="track-map-open-button track-map-open-button-large"
+            type="button"
+            data-map-viewer-src="${escapeHtml(imagePath)}"
+            data-map-viewer-title="${escapeHtml(state.selectedTrack)}"
+          >
+            <img
+              class="track-map-image"
+              src="${escapeHtml(imagePath)}"
+              alt="Схема трассы ${escapeHtml(state.selectedTrack)}"
+            />
+            <span>Открыть на весь экран</span>
+          </button>
         </div>
         <div class="track-map-meta">
           <p class="pilot-tag">Выбрана трасса</p>
@@ -1608,6 +1778,7 @@ function restoreNavigationSnapshot(snapshot) {
   }
 
   renderPilotProfile();
+  renderAnnouncements();
   renderTrackSelector();
   renderTrackLeaderboard();
   renderRaces();
@@ -1751,9 +1922,64 @@ function bindRaceScrollTop() {
   });
 }
 
+function openTrackMapModal(src, title) {
+  const modal = document.querySelector("#track-map-modal");
+  const image = document.querySelector("#track-map-modal-image");
+  const heading = document.querySelector("#track-map-modal-title");
+
+  if (!modal || !image || !heading || !src) {
+    return;
+  }
+
+  image.src = src;
+  image.alt = `Схема трассы ${title || ""}`.trim();
+  heading.textContent = title ? `Схема трассы ${title}` : "Схема трассы";
+  modal.hidden = false;
+  document.body.classList.add("has-open-modal");
+}
+
+function closeTrackMapModal() {
+  const modal = document.querySelector("#track-map-modal");
+  const image = document.querySelector("#track-map-modal-image");
+
+  if (!modal) {
+    return;
+  }
+
+  modal.hidden = true;
+  document.body.classList.remove("has-open-modal");
+
+  if (image) {
+    image.src = "";
+    image.alt = "";
+  }
+}
+
+function bindTrackMapModal() {
+  document.addEventListener("click", (event) => {
+    const openButton = event.target.closest("[data-map-viewer-src]");
+
+    if (openButton) {
+      openTrackMapModal(openButton.dataset.mapViewerSrc, openButton.dataset.mapViewerTitle);
+      return;
+    }
+
+    if (event.target.closest("[data-map-modal-close]")) {
+      closeTrackMapModal();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeTrackMapModal();
+    }
+  });
+}
+
 loadState();
 renderPilotList();
 renderPilotProfile();
+renderAnnouncements();
 renderTrackSelector();
 renderTrackLeaderboard();
 renderRaces();
@@ -1763,6 +1989,7 @@ bindPilotToolbar();
 bindTrackSearch();
 bindRaceFilters();
 bindRaceScrollTop();
+bindTrackMapModal();
 setActiveView(state.activeView);
 if (window.history?.replaceState) {
   history.replaceState(getNavigationSnapshot(), "", window.location.href);

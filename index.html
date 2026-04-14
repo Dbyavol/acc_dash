@@ -72,6 +72,9 @@
             <button class="nav-toggle is-active" type="button" data-view-target="cards">
               Карточки
             </button>
+            <button class="nav-toggle" type="button" data-view-target="announcements">
+              Анонсы
+            </button>
             <button class="nav-toggle" type="button" data-view-target="races">
               Гонки
             </button>
@@ -147,6 +150,20 @@
 
               <div class="profile-layout" id="profile-layout"></div>
             </div>
+          </div>
+        </section>
+
+        <section class="dashboard-view" data-view="announcements">
+          <div class="section">
+            <div class="section-heading announcements-heading">
+              <div>
+                <p class="pilot-tag">Race Calendar</p>
+                <h2>Анонсы гонок</h2>
+              </div>
+              <div class="records-badge" id="announcements-count">0 событий</div>
+            </div>
+
+            <div class="announcements-list" id="announcements-list"></div>
           </div>
         </section>
 
@@ -248,8 +265,27 @@
       </main>
     </div>
 
+    <div class="track-map-modal" id="track-map-modal" hidden>
+      <button class="track-map-modal-backdrop" type="button" data-map-modal-close aria-label="Закрыть схему трассы"></button>
+      <div class="track-map-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="track-map-modal-title">
+        <div class="track-map-modal-head">
+          <div>
+            <p class="pilot-tag">Track Map</p>
+            <h2 id="track-map-modal-title">Схема трассы</h2>
+          </div>
+          <button class="track-map-modal-close" type="button" data-map-modal-close aria-label="Закрыть">
+            ×
+          </button>
+        </div>
+        <div class="track-map-modal-frame">
+          <img id="track-map-modal-image" src="" alt="" />
+        </div>
+      </div>
+    </div>
+
     <script src="data.js"></script>
     <script src="data/site-data.js"></script>
+    <script src="data/announcements/index.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
