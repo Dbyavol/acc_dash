@@ -874,12 +874,6 @@ h3 {
   gap: 10px;
 }
 
-.lap-empty-toggle {
-  min-height: 42px;
-  padding: 0 16px;
-  font-size: 0.9rem;
-}
-
 .pilot-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

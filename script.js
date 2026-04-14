@@ -12,6 +12,8 @@ function escapeHtml(value) {
 }
 
 const STORAGE_KEY = "acc-grid-ui-state";
+const UI_STATE_VERSION = 2;
+const DEFAULT_PILOT_SORT = "races-desc";
 
 function timeToMs(time) {
   if (!time || time === "0:00.000") {
@@ -77,8 +79,7 @@ const state = {
   raceDateTo: "",
   profileResultsPage: 1,
   skillFilter: "all",
-  sortBy: "number-asc",
-  showEmptyLapTimes: false
+  sortBy: DEFAULT_PILOT_SORT
 };
 
 let racesFeed = {
@@ -171,13 +172,10 @@ function loadState() {
       state.skillFilter = saved.skillFilter;
     }
 
-    if (typeof saved.sortBy === "string") {
+    if (saved.uiStateVersion >= UI_STATE_VERSION && typeof saved.sortBy === "string") {
       state.sortBy = saved.sortBy;
     }
 
-    if (typeof saved.showEmptyLapTimes === "boolean") {
-      state.showEmptyLapTimes = saved.showEmptyLapTimes;
-    }
   } catch (error) {
     console.warn("Не удалось восстановить состояние интерфейса.", error);
   }
@@ -185,7 +183,10 @@ function loadState() {
 
 function saveState() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      ...state,
+      uiStateVersion: UI_STATE_VERSION
+    }));
   } catch (error) {
     console.warn("Не удалось сохранить состояние интерфейса.", error);
   }
@@ -835,7 +836,7 @@ function renderPilotProfile() {
     : "";
 
   const completedTracks = tracks.filter((track) => timeToMs(pilot.lapTimes[track]) !== null);
-  const lapTracks = state.showEmptyLapTimes ? tracks : completedTracks;
+  const lapTracks = completedTracks;
   const trackRanks = Object.fromEntries(
     tracks.map((track) => [
       track,
@@ -845,34 +846,44 @@ function renderPilotProfile() {
   const lapRows = lapTracks.length
     ? lapTracks
     .map(
-      (track) => `
-        <tr>
-          <td>
-            <button
-              class="track-jump-button"
-              type="button"
-              data-track-jump="${escapeHtml(track)}"
-            >
-              ${escapeHtml(track)}
-            </button>
-          </td>
-          <td>
-            <button
-              class="track-jump-button track-jump-time"
-              type="button"
-              data-track-jump="${escapeHtml(track)}"
-            >
-              ${escapeHtml(pilot.lapTimes[track])}
-            </button>
-          </td>
-          <td>${trackRanks[track] > 0 ? `P${trackRanks[track]}` : "—"}</td>
-        </tr>
-      `
+      (track) => {
+        const trackRank = trackRanks[track];
+        const podiumRank = getPodiumRank(trackRank);
+        const positionClass = podiumRank ? ` result-position-podium result-position-podium-${podiumRank}` : "";
+
+        return `
+          <tr>
+            <td>
+              <button
+                class="track-jump-button"
+                type="button"
+                data-track-jump="${escapeHtml(track)}"
+              >
+                ${escapeHtml(track)}
+              </button>
+            </td>
+            <td>
+              <button
+                class="track-jump-button track-jump-time"
+                type="button"
+                data-track-jump="${escapeHtml(track)}"
+              >
+                ${escapeHtml(pilot.lapTimes[track])}
+              </button>
+            </td>
+            <td>
+              <span class="result-position-badge${positionClass}">
+                ${trackRank > 0 ? `P${trackRank}` : "—"}
+              </span>
+            </td>
+          </tr>
+        `;
+      }
     )
     .join("")
     : `
       <tr>
-        <td colspan="2" class="race-results-empty">У пилота пока нет зафиксированных времен.</td>
+        <td colspan="3" class="race-results-empty">У пилота пока нет зафиксированных времен.</td>
       </tr>
     `;
   const trackMedals = getPilotTrackMedals(pilot);
@@ -1069,9 +1080,6 @@ function renderPilotProfile() {
         </div>
         <div class="lap-card-actions">
           <div class="records-badge">${completedTracks.length}/${tracks.length} трасс</div>
-          <button class="button lap-empty-toggle" type="button" data-toggle-empty-laps>
-            ${state.showEmptyLapTimes ? "Убрать пустые" : "Показать пустые"}
-          </button>
         </div>
       </div>
 
@@ -1154,12 +1162,6 @@ function renderPilotProfile() {
       navigateToView("tracks");
       saveState();
     });
-  });
-
-  profileLayout.querySelector("[data-toggle-empty-laps]")?.addEventListener("click", () => {
-    state.showEmptyLapTimes = !state.showEmptyLapTimes;
-    renderPilotProfile();
-    saveState();
   });
 
   profileLayout.querySelectorAll("[data-race-jump]").forEach((button) => {
@@ -1654,7 +1656,7 @@ function bindPilotToolbar() {
 
   resetButton?.addEventListener("click", () => {
     state.searchQuery = "";
-    state.sortBy = "number-asc";
+    state.sortBy = DEFAULT_PILOT_SORT;
     state.listView = "compact";
     searchInput.value = "";
     sortSelect.value = state.sortBy;
