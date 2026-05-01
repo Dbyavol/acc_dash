@@ -456,7 +456,7 @@ h3 {
 
 .race-filters {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) repeat(2, minmax(160px, 0.45fr)) auto;
+  grid-template-columns: minmax(240px, 1fr) repeat(2, minmax(160px, 0.45fr)) auto auto;
   gap: 14px;
   margin-top: 12px;
   align-items: end;
@@ -477,6 +477,37 @@ h3 {
 
 .race-filter-reset {
   min-height: 48px;
+  white-space: nowrap;
+}
+
+.race-filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.race-filter-checkbox:hover {
+  border-color: var(--accent);
+  background-color: rgba(255, 107, 44, 0.08);
+}
+
+.checkbox-input {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.race-filter-checkbox span {
   white-space: nowrap;
 }
 
@@ -1333,12 +1364,66 @@ h3 {
   background: rgba(255, 211, 106, 0.1);
 }
 
+.race-card.session-type-qualifying {
+  --session-accent: #6ba3ff;
+}
+
+.race-card.session-type-qualifying .pilot-tag {
+  background: rgba(107, 163, 255, 0.15);
+  color: #6ba3ff;
+}
+
+.race-card.session-type-practice {
+  --session-accent: #a78bff;
+}
+
+.race-card.session-type-practice .pilot-tag {
+  background: rgba(167, 139, 255, 0.15);
+  color: #a78bff;
+}
+
+.race-card.session-type-race {
+  --session-accent: #ff6b2c;
+}
+
+.race-card.session-type-race .pilot-tag {
+  background: rgba(255, 107, 44, 0.15);
+  color: #ff6b2c;
+}
+
+.race-session-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.race-session-badge-race {
+  background: rgba(255, 107, 44, 0.15);
+  color: #ff6b2c;
+}
+
+.race-session-badge-qualifying {
+  background: rgba(107, 163, 255, 0.15);
+  color: #6ba3ff;
+}
+
+.race-session-badge-practice {
+  background: rgba(167, 139, 255, 0.15);
+  color: #a78bff;
+}
+
 .race-results-panel {
   display: none;
   margin-top: 18px;
 }
 
-.race-results-panel.is-open {
+.race-card.is-open .race-results-panel {
   display: block;
   animation: view-enter 220ms ease both;
 }

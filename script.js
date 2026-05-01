@@ -83,7 +83,8 @@ const state = {
   raceDateTo: "",
   profileResultsPage: 1,
   skillFilter: "all",
-  sortBy: DEFAULT_PILOT_SORT
+  sortBy: DEFAULT_PILOT_SORT,
+  raceSessionsMode: false
 };
 
 let racesFeed = {
@@ -178,6 +179,10 @@ function loadState() {
 
     if (saved.uiStateVersion >= UI_STATE_VERSION && typeof saved.sortBy === "string") {
       state.sortBy = saved.sortBy;
+    }
+
+    if (typeof saved.raceSessionsMode === "boolean") {
+      state.raceSessionsMode = saved.raceSessionsMode;
     }
 
   } catch (error) {
@@ -359,6 +364,13 @@ function openRaceResults(raceId, sessionType = "race") {
   clearRaceFilters();
   state.selectedRaceId = raceId;
   state.selectedRaceSessions[raceId] = sessionType;
+  state.raceSessionsMode = false;
+  
+  const raceSessionsCheckbox = document.querySelector("#race-sessions-mode");
+  if (raceSessionsCheckbox) {
+    raceSessionsCheckbox.checked = false;
+  }
+  
   renderRaces();
   navigateToView("races");
   scrollToRaceCard(raceId);
@@ -377,22 +389,43 @@ function openSessionSource(source) {
       : sourceType === "FP"
         ? "practice"
         : "race";
-  const race = racesFeed.races.find((candidate) => {
-    const sessions = candidate.sessions || {};
-    const practiceSessions = Array.isArray(sessions.practices) ? sessions.practices : [];
 
-    return (
-      sessions.race?.session_file === source.session_file ||
-      sessions.qualifying?.session_file === source.session_file ||
-      practiceSessions.some((practice) => practice.session_file === source.session_file)
-    );
-  });
-
-  if (!race) {
-    return;
+  // Включить режим отдельных заездов
+  state.raceSessionsMode = true;
+  
+  const raceSessionsCheckbox = document.querySelector("#race-sessions-mode");
+  if (raceSessionsCheckbox) {
+    raceSessionsCheckbox.checked = true;
   }
 
-  openRaceResults(getRaceId(race), sessionType);
+  // Перейти в раздел гонок
+  navigateToView("races");
+  
+  // Отрендерить в новом режиме
+  renderRaces();
+  
+  // Скроллить к нужной сессии
+  requestAnimationFrame(() => {
+    const sessionCard = document.querySelector(`[data-session-file="${source.session_file}"]`);
+    if (sessionCard) {
+      sessionCard.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+      
+      // Автоматически разворачиваем сессию
+      const sessionId = sessionCard.getAttribute("data-session-id");
+      if (sessionId) {
+        sessionCard.classList.add("is-open");
+        const chevron = sessionCard.querySelector(".race-chevron");
+        if (chevron) {
+          chevron.textContent = "−";
+        }
+      }
+    }
+  });
+  
+  saveState();
 }
 
 function formatRaceGapToLeader(entry, leaderEntry) {
@@ -1583,6 +1616,11 @@ function renderTrackLeaderboard() {
 }
 
 function renderRaces() {
+  if (state.raceSessionsMode) {
+    renderSessionsList();
+    return;
+  }
+
   const list = document.querySelector("#races-list");
   const filteredRaces = getFilteredRaces();
 
@@ -1753,6 +1791,174 @@ function renderRaces() {
 
   list.querySelectorAll("[data-pilot-jump]").forEach((button) => {
     button.addEventListener("click", () => {
+      openPilotProfile(button.dataset.pilotJump);
+    });
+  });
+}
+
+function renderSessionsList() {
+  const list = document.querySelector("#races-list");
+  const filteredRaces = getFilteredRaces();
+
+  if (!Array.isArray(racesFeed.races) || racesFeed.races.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>Гонки пока не загружены</h3>
+        <p>Когда вы запустите скрипт выгрузки из API, этот раздел автоматически начнет показывать последние race-сессии.</p>
+      </div>
+    `;
+    return;
+  }
+
+  if (!filteredRaces.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>Гонки не найдены</h3>
+        <p>Попробуйте изменить название трассы или диапазон дат.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const allSessions = [];
+  filteredRaces.forEach((race) => {
+    if (race.sessions) {
+      if (race.sessions.race) {
+        allSessions.push({
+          ...race.sessions.race,
+          type: "race",
+          track: race.track,
+          track_label: race.track_label,
+          date: race.date
+        });
+      }
+      if (race.sessions.qualifying) {
+        allSessions.push({
+          ...race.sessions.qualifying,
+          type: "qualifying",
+          track: race.track,
+          track_label: race.track_label,
+          date: race.date
+        });
+      }
+      if (Array.isArray(race.sessions.practices)) {
+        race.sessions.practices.forEach((practice) => {
+          allSessions.push({
+            ...practice,
+            type: "practice",
+            track: race.track,
+            track_label: race.track_label,
+            date: race.date
+          });
+        });
+      }
+    }
+  });
+
+  allSessions.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  list.innerHTML = allSessions
+    .map((session, index) => {
+      const sessionId = `sess-${index}`;
+      const typeLabel = session.type === "race" ? "Гонка" : session.type === "qualifying" ? "Квалификация" : "Практика";
+      const typeClass = `session-type-${session.type}`;
+      const entries = Array.isArray(session.entries) ? session.entries : [];
+      const leaderEntry = entries[0] || null;
+      const bestLapMs = entries.reduce((best, entry) => {
+        if (entry.best_lap_ms === null || entry.best_lap_ms === undefined) {
+          return best;
+        }
+        if (best === null || entry.best_lap_ms < best) {
+          return entry.best_lap_ms;
+        }
+        return best;
+      }, null);
+
+      const rows = entries.length
+        ? entries
+            .map(
+              (entry) => `
+                <tr>
+                  <td>${escapeHtml(entry.position)}</td>
+                  <td>
+                    <button
+                      class="inline-nav-button"
+                      type="button"
+                      data-pilot-jump="${escapeHtml(entry.pilot_id)}"
+                    >
+                      ${escapeHtml(entry.driver_name || "Неизвестный пилот")}
+                    </button>
+                  </td>
+                  <td>${escapeHtml(entry.race_number || "—")}</td>
+                  <td>${escapeHtml(entry.car_model_name || `Car #${entry.car_model ?? "—"}`)}</td>
+                  <td>${escapeHtml(String(entry.lap_count ?? "—"))}</td>
+                  <td class="${entry.best_lap_ms !== null && entry.best_lap_ms === bestLapMs ? "race-best-lap" : ""}">${escapeHtml(entry.best_lap || "—")}</td>
+                  <td>${escapeHtml(formatRaceTotalTime(entry.total_time))}</td>
+                  <td>${escapeHtml(formatRaceGapToLeader(entry, leaderEntry))}</td>
+                </tr>
+              `
+            )
+            .join("")
+        : `
+          <tr>
+            <td colspan="8" class="race-results-empty">Результаты этой сессии пока не загружены.</td>
+          </tr>
+        `;
+
+      return `
+        <article class="records-card race-card ${typeClass}" data-session-id="${sessionId}" data-session-file="${escapeHtml(session.session_file || "")}">
+          <button class="race-card-top race-toggle" type="button" data-session-toggle="${sessionId}">
+            <div>
+              <h3>${escapeHtml(session.track_label || session.track || "Неизвестная трасса")}</h3>
+              <p class="race-card-date">${escapeHtml(formatRaceDate(session.date))}</p>
+            </div>
+            <div class="race-card-badges">
+              <div class="race-count-badge">${escapeHtml(String(entries.length))} пилотов</div>
+              <div class="records-badge race-session-badge race-session-badge-${session.type}">${typeLabel}</div>
+              <div class="race-chevron">+</div>
+            </div>
+          </button>
+          <div class="race-results-panel">
+            <div class="records-table-wrapper">
+              <table class="records-table race-results-table">
+                <thead>
+                  <tr>
+                    <th>Позиция</th>
+                    <th>Пилот</th>
+                    <th>Номер</th>
+                    <th>Машина</th>
+                    <th>Круги</th>
+                    <th>Лучший круг</th>
+                    <th>Общее время</th>
+                    <th>Отставание</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+
+  list.querySelectorAll("[data-session-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const sessionId = button.dataset.sessionToggle;
+      const card = list.querySelector(`[data-session-id="${sessionId}"]`);
+      if (card) {
+        card.classList.toggle("is-open");
+        const chevron = button.querySelector(".race-chevron");
+        if (chevron) {
+          chevron.textContent = card.classList.contains("is-open") ? "−" : "+";
+        }
+      }
+    });
+  });
+
+  list.querySelectorAll("[data-pilot-jump]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
       openPilotProfile(button.dataset.pilotJump);
     });
   });
@@ -1960,6 +2166,16 @@ function bindRaceFilters() {
     renderRaces();
     saveState();
   });
+
+  const raceSessionsMode = document.querySelector("#race-sessions-mode");
+  if (raceSessionsMode) {
+    raceSessionsMode.checked = state.raceSessionsMode;
+    raceSessionsMode.addEventListener("change", (event) => {
+      state.raceSessionsMode = event.target.checked;
+      renderRaces();
+      saveState();
+    });
+  }
 }
 
 function bindRaceScrollTop() {
