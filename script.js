@@ -578,6 +578,20 @@ function getFilteredPilots() {
           return left.name.localeCompare(right.name, "ru");
         case "races-desc":
           return (right.stats?.races || 0) - (left.stats?.races || 0);
+        case "last-race-desc": {
+          const leftLastRace = (left.recentResults || [])[0];
+          const rightLastRace = (right.recentResults || [])[0];
+          const leftDate = leftLastRace?.date || "";
+          const rightDate = rightLastRace?.date || "";
+          return rightDate.localeCompare(leftDate);
+        }
+        case "last-race-asc": {
+          const leftLastRace = (left.recentResults || [])[0];
+          const rightLastRace = (right.recentResults || [])[0];
+          const leftDate = leftLastRace?.date || "";
+          const rightDate = rightLastRace?.date || "";
+          return leftDate.localeCompare(rightDate);
+        }
         case "age-asc":
           return left.age - right.age;
         case "age-desc":
