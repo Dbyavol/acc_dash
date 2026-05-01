@@ -1041,12 +1041,24 @@ function renderPilotList() {
           : "";
       const podiumCups = renderPodiumCups(pilot);
 
+      // Show sorting meta when sorting by last race
+      let sortMeta = "";
+      if (typeof state.sortBy === "string" && state.sortBy.startsWith("last-race")) {
+        const last = (pilot.recentResults || [])[0];
+        if (last && last.date) {
+          sortMeta = `<span class="pilot-list-sort-meta">Последний заезд: ${escapeHtml(formatRaceDate(last.date))}</span>`;
+        } else {
+          sortMeta = `<span class="pilot-list-sort-meta">Последний заезд: —</span>`;
+        }
+      }
+
       return `
         <button class="pilot-list-item" type="button" data-pilot-id="${escapeHtml(pilot.id)}">
           <div class="pilot-list-main">
             <span class="pilot-list-name">${escapeHtml(pilot.name)}</span>
             ${compactMeta}
             ${podiumCups}
+            ${sortMeta}
             ${detailedBlock}
           </div>
           <span class="pilot-list-number">${escapeHtml(pilot.number)}</span>

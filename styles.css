@@ -1418,6 +1418,13 @@ h3 {
   color: #a78bff;
 }
 
+.pilot-list-sort-meta {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+
 .race-results-panel {
   display: none;
   margin-top: 18px;
