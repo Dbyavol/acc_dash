@@ -1025,6 +1025,7 @@ function renderPilotList() {
 
   pilotList.innerHTML = filteredPilots
     .map((pilot) => {
+      const raceCount = Number(pilot.stats?.races ?? (pilot.recentResults || []).length ?? 0);
       const compactMeta =
         state.listView === "compact"
           ? ""
@@ -1040,6 +1041,7 @@ function renderPilotList() {
           `
           : "";
       const podiumCups = renderPodiumCups(pilot);
+      const raceCountBadge = `<span class="pilot-list-race-count">Заездов: ${escapeHtml(String(raceCount))}</span>`;
 
       // Show sorting meta when sorting by last race
       let sortMeta = "";
@@ -1056,6 +1058,7 @@ function renderPilotList() {
         <button class="pilot-list-item" type="button" data-pilot-id="${escapeHtml(pilot.id)}">
           <div class="pilot-list-main">
             <span class="pilot-list-name">${escapeHtml(pilot.name)}</span>
+            ${raceCountBadge}
             ${compactMeta}
             ${podiumCups}
             ${sortMeta}

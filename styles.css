@@ -1425,6 +1425,14 @@ h3 {
   margin-top: 6px;
 }
 
+.pilot-list-race-count {
+  display: block;
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
 .race-results-panel {
   display: none;
   margin-top: 18px;
